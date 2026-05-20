@@ -26,10 +26,15 @@ class ChessWaitingRoom extends StatefulWidget {
 class _ChessWaitingRoomState extends State<ChessWaitingRoom>
     with SingleTickerProviderStateMixin {
   RealtimeChannel? _channel;
-  bool _whiteHere = false;
-  bool _blackHere = false;
+
+  // Track which roles are present using a local set
+  final Set<String> _presentRoles = {};
+
   bool _wentToGame = false;
   late AnimationController _pulse;
+
+  bool get _whiteHere => _presentRoles.contains('white');
+  bool get _blackHere => _presentRoles.contains('black');
 
   @override
   void initState() {
@@ -42,60 +47,87 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
   }
 
   Future<void> _subscribe() async {
+    final myRole = widget.isCreator ? 'white' : 'black';
     final ch = Supabase.instance.client.channel('chess:${widget.roomCode}');
     _channel = ch;
 
-    ch.onPresenceSync((_) => _syncPresence()).subscribe((status, [_]) async {
-      if (status == RealtimeSubscribeStatus.subscribed) {
-        await ch.track({'role': widget.isCreator ? 'white' : 'black'});
-        _syncPresence();
-      }
-    });
-  }
-
-  void _syncPresence() {
-    if (!mounted || _wentToGame) return;
-    try {
-      final raw = _channel?.presenceState();
-      final presence = (raw as Map?)?.cast<String, dynamic>() ?? {};
-      final roles = _parsePresenceRoles(presence);
-      final w = roles.contains('white');
-      final b = roles.contains('black');
-      setState(() {
-        _whiteHere = w;
-        _blackHere = b;
-      });
-      if (w && b) {
-        _wentToGame = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+    ch
+        // When a new player joins
+        .onPresenceJoin((payload) {
           if (!mounted) return;
-          context.go('/chess/${widget.roomCode}?creator=${widget.isCreator}');
+          _extractRolesFromPresences(payload.newPresences);
+          _checkAndStart();
+        })
+        // When a player leaves
+        .onPresenceLeave((payload) {
+          if (!mounted) return;
+          for (final p in payload.leftPresences) {
+            final role = _roleFromPresence(p);
+            if (role != null) {
+              setState(() => _presentRoles.remove(role));
+            }
+          }
+        })
+        // Full sync (initial state when we first connect)
+        .onPresenceSync((_) {
+          if (!mounted) return;
+          _syncFromPresenceState();
+          _checkAndStart();
+        })
+        .subscribe((status, [err]) async {
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            // Track our own presence
+            await ch.track({'role': myRole});
+          }
         });
-      }
-    } catch (_) {}
   }
 
-  Set<String> _parsePresenceRoles(Map<String, dynamic> presence) {
+  /// Extract roles from a list of Presence objects (from join payload)
+  void _extractRolesFromPresences(List<Presence> presences) {
+    for (final p in presences) {
+      final role = _roleFromPresence(p);
+      if (role != null) {
+        setState(() => _presentRoles.add(role));
+      }
+    }
+  }
+
+  /// Pull 'role' from a single Presence object
+  String? _roleFromPresence(Presence p) {
+    final role = p.payload['role'];
+    if (role is String && role.isNotEmpty) return role;
+    return null;
+  }
+
+  /// Called on presenceSync — rebuild the full set from scratch
+  void _syncFromPresenceState() {
+    final state = _channel?.presenceState();
+    if (state is! Map) return;
     final Set<String> roles = {};
-    for (final val in presence.values) {
-      if (val is List) {
-        for (final dynamic p in val) {
-          try {
-            final payload = p.payload as Map?;
-            if (payload != null) {
-              final role = payload['role'];
-              if (role is String) roles.add(role);
-            }
-          } catch (_) {
-            if (p is Map) {
-              final role = p['role'];
-              if (role is String) roles.add(role);
-            }
+    for (final presenceList in (state as Map).values) {
+      if (presenceList is List) {
+        for (final p in presenceList) {
+          if (p is Presence) {
+            final role = _roleFromPresence(p);
+            if (role != null) roles.add(role);
           }
         }
       }
     }
-    return roles;
+    setState(() {
+      _presentRoles
+        ..clear()
+        ..addAll(roles);
+    });
+  }
+
+  void _checkAndStart() {
+    if (_wentToGame || !_whiteHere || !_blackHere) return;
+    _wentToGame = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/chess/${widget.roomCode}?creator=${widget.isCreator}');
+    });
   }
 
   @override
@@ -203,8 +235,7 @@ class _PlayerWaitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border =
-        joined ? AppColors.success : AppColors.border;
+    final border = joined ? AppColors.success : AppColors.border;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       padding: const EdgeInsets.all(18),
@@ -259,7 +290,7 @@ class _PlayerWaitCard extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: joined ? AppColors.success : accent.withOpacity(0.9),
+              color: joined ? AppColors.success : accent.withValues(alpha: 0.9),
             ),
           ),
         ],

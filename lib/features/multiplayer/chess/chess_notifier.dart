@@ -66,21 +66,28 @@ class ChessNotifier extends StateNotifier<ChessState> {
             } catch (_) {}
           },
         )
-        // ── Presence sync — win on disconnect ───────────────────────────────
         .onPresenceSync((_) {
             if (state.gameOver) return;
             try {
-              final rawPresence = _channel?.presenceState();
-              final presence = (rawPresence as Map?)?.cast<String, dynamic>() ?? {};
-              final roles = _parsePresenceRoles(presence);
-
+              final presenceState = _channel?.presenceState();
+              if (presenceState is! Map) return;
+              final roles = <String>{};
+              for (final list in (presenceState as Map).values) {
+                if (list is List) {
+                  for (final p in list) {
+                    if (p is Presence) {
+                      final role = p.payload['role'];
+                      if (role is String) roles.add(role);
+                    }
+                  }
+                }
+              }
               // If we are the only player left, declare win by forfeit.
               if (roles.length == 1 && roles.contains(_myRole)) {
                 state = state.copyWith(
                   gameOver: true,
                   winner: myColor,
-                  statusMsg:
-                      'Opponent left the game. You win by default!',
+                  statusMsg: 'Opponent left the game. You win by default!',
                 );
               }
             } catch (_) {}
@@ -127,29 +134,8 @@ class ChessNotifier extends StateNotifier<ChessState> {
     return raw;
   }
 
-  /// Extract presence roles (Strings) from the presence state map.
-  Set<String> _parsePresenceRoles(Map<String, dynamic> presence) {
-    final Set<String> roles = {};
-    for (final val in presence.values) {
-      if (val is List) {
-        for (final dynamic p in val) {
-          try {
-            final payload = p.payload as Map?;
-            if (payload != null) {
-              final role = payload['role'];
-              if (role is String) roles.add(role);
-            }
-          } catch (_) {
-            if (p is Map) {
-              final role = p['role'];
-              if (role is String) roles.add(role);
-            }
-          }
-        }
-      }
-    }
-    return roles;
-  }
+
+
 
   @override
   void dispose() {

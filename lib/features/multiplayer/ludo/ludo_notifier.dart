@@ -100,9 +100,20 @@ class LudoNotifier extends StateNotifier<LudoState> {
         .onPresenceSync((_) {
             if (state.gameOver) return;
             try {
-              final rawPresence = _channel?.presenceState();
-              final presence = (rawPresence as Map?)?.cast<String, dynamic>() ?? {};
-              final onlinePlayerIndices = _parsePresencePlayers(presence);
+              final presenceState = _channel?.presenceState();
+              if (presenceState is! Map) return;
+              final onlinePlayerIndices = <int>{};
+              for (final list in (presenceState as Map).values) {
+                if (list is List) {
+                  for (final p in list) {
+                    if (p is Presence) {
+                      final val = p.payload['player'];
+                      if (val is int) onlinePlayerIndices.add(val);
+                      else if (val is num) onlinePlayerIndices.add(val.toInt());
+                    }
+                  }
+                }
+              }
               // Check which active players are no longer online
               for (final pi in List<int>.from(state.activePlayers)) {
                 if (!onlinePlayerIndices.contains(pi)) {
@@ -195,29 +206,8 @@ class LudoNotifier extends StateNotifier<LudoState> {
     );
   }
 
-  /// Parse presence state to extract which player indices are online.
-  Set<int> _parsePresencePlayers(Map<String, dynamic> presence) {
-    final Set<int> online = {};
-    for (final val in presence.values) {
-      if (val is List) {
-        for (final dynamic p in val) {
-          try {
-            final payload = p.payload as Map?;
-            if (payload != null) {
-              final playerIdx = payload['player'];
-              if (playerIdx is int) online.add(playerIdx);
-            }
-          } catch (_) {
-            if (p is Map) {
-              final playerIdx = p['player'];
-              if (playerIdx is int) online.add(playerIdx);
-            }
-          }
-        }
-      }
-    }
-    return online;
-  }
+
+
 
   @override
   void dispose() {

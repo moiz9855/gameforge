@@ -30,7 +30,10 @@ class LudoWaitingRoom extends StatefulWidget {
 
 class _LudoWaitingRoomState extends State<LudoWaitingRoom> {
   RealtimeChannel? _channel;
+
+  // Tracks which player indices (seats) are currently present
   final Set<int> _seen = {};
+
   bool _started = false;
 
   static const List<Color> _dots = [
@@ -50,58 +53,79 @@ class _LudoWaitingRoomState extends State<LudoWaitingRoom> {
     final ch = Supabase.instance.client.channel('ludo:${widget.roomCode}');
     _channel = ch;
 
-    ch.onPresenceSync((_) => _syncPresence()).subscribe((status, [_]) async {
-      if (status == RealtimeSubscribeStatus.subscribed) {
-        await ch.track({'player': widget.myPlayerIdx});
-        _syncPresence();
-      }
-    });
-  }
-
-  void _syncPresence() {
-    if (!mounted || _started) return;
-    try {
-      final raw = _channel?.presenceState();
-      final presence = (raw as Map?)?.cast<String, dynamic>() ?? {};
-      final online = _parsePresencePlayers(presence);
-      setState(() => _seen
-        ..clear()
-        ..addAll(online));
-
-      if (online.length >= widget.numPlayers) {
-        _started = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+    ch
+        // New player joined
+        .onPresenceJoin((payload) {
           if (!mounted) return;
-          context.go(
-            '/ludo/${widget.roomCode}?creator=${widget.isCreator}'
-            '&players=${widget.numPlayers}&myIdx=${widget.myPlayerIdx}',
-          );
+          for (final p in payload.newPresences) {
+            final idx = _playerIdxFromPresence(p);
+            if (idx != null) setState(() => _seen.add(idx));
+          }
+          _checkAndStart();
+        })
+        // Player left
+        .onPresenceLeave((payload) {
+          if (!mounted) return;
+          for (final p in payload.leftPresences) {
+            final idx = _playerIdxFromPresence(p);
+            if (idx != null) setState(() => _seen.remove(idx));
+          }
+        })
+        // Full sync (initial state)
+        .onPresenceSync((_) {
+          if (!mounted) return;
+          _syncFromPresenceState();
+          _checkAndStart();
+        })
+        .subscribe((status, [err]) async {
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            await ch.track({'player': widget.myPlayerIdx});
+          }
         });
-      }
-    } catch (_) {}
   }
 
-  Set<int> _parsePresencePlayers(Map<String, dynamic> presence) {
+  /// Extract player index from a typed Presence object
+  int? _playerIdxFromPresence(Presence p) {
+    final val = p.payload['player'];
+    if (val is int) return val;
+    // JSON sometimes deserialises numbers as double
+    if (val is double) return val.toInt();
+    if (val is num) return val.toInt();
+    return null;
+  }
+
+  /// Called on presenceSync — rebuild _seen from scratch
+  void _syncFromPresenceState() {
+    final state = _channel?.presenceState();
+    if (state is! Map) return;
     final Set<int> indices = {};
-    for (final val in presence.values) {
-      if (val is List) {
-        for (final dynamic p in val) {
-          try {
-            final payload = p.payload as Map?;
-            if (payload != null) {
-              final playerIdx = payload['player'];
-              if (playerIdx is int) indices.add(playerIdx);
-            }
-          } catch (_) {
-            if (p is Map) {
-              final playerIdx = p['player'];
-              if (playerIdx is int) indices.add(playerIdx);
-            }
+    for (final list in (state as Map).values) {
+      if (list is List) {
+        for (final p in list) {
+          if (p is Presence) {
+            final idx = _playerIdxFromPresence(p);
+            if (idx != null) indices.add(idx);
           }
         }
       }
     }
-    return indices;
+    setState(() {
+      _seen
+        ..clear()
+        ..addAll(indices);
+    });
+  }
+
+  void _checkAndStart() {
+    if (_started || _seen.length < widget.numPlayers) return;
+    _started = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go(
+        '/ludo/${widget.roomCode}?creator=${widget.isCreator}'
+        '&players=${widget.numPlayers}&myIdx=${widget.myPlayerIdx}',
+      );
+    });
   }
 
   @override
@@ -150,6 +174,17 @@ class _LudoWaitingRoomState extends State<LudoWaitingRoom> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
+              'WAITING ROOM',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.rajdhani(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 4,
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
               widget.roomCode,
               textAlign: TextAlign.center,
               style: GoogleFonts.pressStart2p(
@@ -194,7 +229,7 @@ class _LudoWaitingRoomState extends State<LudoWaitingRoom> {
                             gradient: AppColors.fireGradient,
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.35),
+                                color: AppColors.primary.withValues(alpha: 0.35),
                                 blurRadius: 16,
                               ),
                             ],
@@ -210,7 +245,7 @@ class _LudoWaitingRoomState extends State<LudoWaitingRoom> {
             if (widget.isCreator)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
-                child:               FriendInvitePanel(
+                child: FriendInvitePanel(
                   roomCode: widget.roomCode,
                   gameType: 'ludo',
                   ludoPlayerCount: widget.numPlayers,
@@ -255,7 +290,7 @@ class _SeatOrb extends StatelessWidget {
               boxShadow: filled
                   ? [
                       BoxShadow(
-                        color: color.withOpacity(0.35),
+                        color: color.withValues(alpha: 0.35),
                         blurRadius: 14,
                       ),
                     ]
@@ -265,7 +300,7 @@ class _SeatOrb extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 18,
-                  backgroundColor: color.withOpacity(0.25),
+                  backgroundColor: color.withValues(alpha: 0.25),
                   child: Text(
                     label[0],
                     style: TextStyle(
