@@ -58,7 +58,7 @@ class _SnakeScreenState extends State<SnakeScreen> {
 
   void _start() {
     _timer?.cancel();
-    final mid = (_rows ~/ 2) * _cols + _cols ~/ 2;
+    const mid = (_rows ~/ 2) * _cols + _cols ~/ 2;
     setState(() {
       _snake = [mid, mid - 1, mid - 2];
       _dir = _Dir.right;
@@ -176,9 +176,9 @@ class _SnakeScreenState extends State<SnakeScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFF0D1117),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1.5),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1.5),
                         boxShadow: [
-                          BoxShadow(color: AppColors.primary.withOpacity(0.15),
+                          BoxShadow(color: AppColors.primary.withValues(alpha: 0.15),
                               blurRadius: 20, spreadRadius: 2),
                         ],
                       ),
@@ -199,7 +199,7 @@ class _SnakeScreenState extends State<SnakeScreen> {
                     if (_gameOver)
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.78),
+                          color: Colors.black.withValues(alpha: 0.78),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
@@ -267,7 +267,7 @@ class _BoardPainter extends CustomPainter {
 
     // Grid lines (subtle)
     final gridPaint = Paint()
-      ..color = AppColors.primary.withOpacity(0.06)
+      ..color = AppColors.primary.withValues(alpha: 0.06)
       ..strokeWidth = 0.5;
     for (int r = 0; r <= rows; r++) {
       canvas.drawLine(Offset(0, r * cellH), Offset(size.width, r * cellH), gridPaint);
@@ -288,7 +288,7 @@ class _BoardPainter extends CustomPainter {
 
     // Glow on food
     final glowPaint = Paint()
-      ..color = AppColors.fire2.withOpacity(0.35)
+      ..color = AppColors.fire2.withValues(alpha: 0.35)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawRRect(foodRect, glowPaint);
 
@@ -298,7 +298,7 @@ class _BoardPainter extends CustomPainter {
       final sc = snake[i] % cols;
       final t = 1.0 - (i / snake.length) * 0.5; // fade tail
       final snakePaint = Paint()
-        ..color = (i == 0 ? AppColors.primary : AppColors.primary.withOpacity(t));
+        ..color = (i == 0 ? AppColors.primary : AppColors.primary.withValues(alpha: t));
       final rect = RRect.fromRectAndRadius(
         Rect.fromLTWH(sc * cellW + 1, sr * cellH + 1, cellW - 2, cellH - 2),
         Radius.circular(i == 0 ? 5 : 3),
@@ -311,7 +311,7 @@ class _BoardPainter extends CustomPainter {
       final hr = snake[0] ~/ cols;
       final hc = snake[0] % cols;
       final headGlow = Paint()
-        ..color = AppColors.primary.withOpacity(0.4)
+        ..color = AppColors.primary.withValues(alpha: 0.4)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
@@ -392,9 +392,9 @@ class _DBtn extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 1),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 1),
           boxShadow: [
-            BoxShadow(color: AppColors.primary.withOpacity(0.2), blurRadius: 8),
+            BoxShadow(color: AppColors.primary.withValues(alpha: 0.2), blurRadius: 8),
           ],
         ),
         child: Icon(icon, color: AppColors.fire2, size: 24),

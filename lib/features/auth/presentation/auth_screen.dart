@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:game_forge/core/constants/app_colors.dart';
-import 'package:game_forge/features/auth/data/auth_repository.dart';
 import 'auth_controller.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -76,10 +74,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               height: 400,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.15),
+                color: AppColors.primary.withValues(alpha: 0.15),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -95,10 +93,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.fire2.withOpacity(0.08),
+                color: AppColors.fire2.withValues(alpha: 0.08),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.22),
+                    color: AppColors.primary.withValues(alpha: 0.22),
                     blurRadius: 100,
                     spreadRadius: 50,
                   ),
@@ -194,7 +192,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.5),
+                              color: AppColors.primary.withValues(alpha: 0.5),
                               blurRadius: 20,
                               spreadRadius: 2,
                             ),

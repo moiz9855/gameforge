@@ -51,7 +51,7 @@ class BuilderState {
 
 class BuilderController extends StateNotifier<BuilderState> {
   final Ref _ref;
-  final _uuid = Uuid();
+  final _uuid = const Uuid();
 
   BuilderController(this._ref) : super(BuilderState());
 

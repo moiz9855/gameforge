@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -124,19 +122,16 @@ class _LudoScreenState extends ConsumerState<LudoScreen> {
                   child: Center(
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: Transform.rotate(
-                        angle: -widget.myPlayerIdx * math.pi / 2,
-                        child: LudoBoard(
-                          state: state,
-                          myPlayerIdx: widget.myPlayerIdx,
-                          movableTokenIndices: movable,
-                          onTokenTap: (pi, ti) {
-                            if (pi == widget.myPlayerIdx &&
-                                movable.contains(ti)) {
-                              notifier.moveToken(ti);
-                            }
-                          },
-                        ),
+                      child: LudoBoard(
+                        state: state,
+                        myPlayerIdx: widget.myPlayerIdx,
+                        movableTokenIndices: movable,
+                        onTokenTap: (pi, ti) {
+                          if (pi == widget.myPlayerIdx &&
+                              movable.contains(ti)) {
+                            notifier.moveToken(ti);
+                          }
+                        },
                       ),
                     ),
                   ),
@@ -148,7 +143,7 @@ class _LudoScreenState extends ConsumerState<LudoScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   border: Border(
-                    top: BorderSide(color: AppColors.border.withOpacity(0.65)),
+                    top: BorderSide(color: AppColors.border.withValues(alpha: 0.65)),
                   ),
                 ),
                 child: Row(
@@ -166,16 +161,16 @@ class _LudoScreenState extends ConsumerState<LudoScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: col.withOpacity(active ? 0.28 : 0.07),
+                              color: col.withValues(alpha: active ? 0.28 : 0.07),
                               borderRadius: BorderRadius.circular(22),
                               border: Border.all(
-                                color: col.withOpacity(active ? 1 : 0.35),
+                                color: col.withValues(alpha: active ? 1 : 0.35),
                                 width: active ? 2 : 1,
                               ),
                               boxShadow: active
                                   ? [
                                       BoxShadow(
-                                        color: col.withOpacity(0.35),
+                                        color: col.withValues(alpha: 0.35),
                                         blurRadius: 12,
                                       ),
                                     ]
@@ -230,9 +225,9 @@ class _TurnBar extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            color.withOpacity(0),
+            color.withValues(alpha: 0),
             color,
-            color.withOpacity(0),
+            color.withValues(alpha: 0),
           ],
         ),
       ),
@@ -254,18 +249,18 @@ class _GameOverOverlay extends StatelessWidget {
         : AppColors.textSecondary;
 
     return Container(
-      color: Colors.black.withOpacity(0.74),
+      color: Colors.black.withValues(alpha: 0.74),
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(28),
           padding: const EdgeInsets.all(26),
           decoration: BoxDecoration(
-            color: AppColors.card.withOpacity(0.96),
+            color: AppColors.card.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: accent.withOpacity(0.35),
+                color: accent.withValues(alpha: 0.35),
                 blurRadius: 26,
               ),
             ],

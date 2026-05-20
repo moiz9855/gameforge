@@ -63,7 +63,7 @@ class ProfileScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 border: Border(
-                  bottom: BorderSide(color: AppColors.border.withOpacity(0.55)),
+                  bottom: BorderSide(color: AppColors.border.withValues(alpha: 0.55)),
                 ),
               ),
               child: Column(
@@ -76,7 +76,7 @@ class ProfileScreen extends ConsumerWidget {
                       border: Border.all(color: AppColors.primary, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.55),
+                          color: AppColors.primary.withValues(alpha: 0.55),
                           blurRadius: 22,
                           spreadRadius: 2,
                         ),
@@ -236,7 +236,7 @@ class _FriendsTabBody extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.35),
+                        color: AppColors.primary.withValues(alpha: 0.35),
                         blurRadius: 14,
                         offset: const Offset(0, 8),
                       ),
@@ -326,7 +326,7 @@ class _FriendsTabBody extends ConsumerWidget {
                               CircleAvatar(
                                 radius: 22,
                                 backgroundColor:
-                                    AppColors.primary.withOpacity(0.18),
+                                    AppColors.primary.withValues(alpha: 0.18),
                                 child: Text(
                                   name.isNotEmpty ? name[0].toUpperCase() : '?',
                                   style: const TextStyle(
@@ -377,7 +377,7 @@ class _FriendsTabBody extends ConsumerWidget {
                           ),
                           IconButton(
                             icon: Icon(Icons.sports_esports_rounded,
-                                color: AppColors.fire2.withOpacity(0.95)),
+                                color: AppColors.fire2.withValues(alpha: 0.95)),
                             tooltip: 'Challenge',
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(

@@ -31,7 +31,7 @@ class Pos {
   bool get valid => r >= 0 && r < 8 && c >= 0 && c < 8;
 
   @override
-  bool operator ==(Object o) => o is Pos && r == o.r && c == o.c;
+  bool operator ==(Object other) => other is Pos && r == other.r && c == other.c;
 
   @override
   int get hashCode => r * 8 + c;

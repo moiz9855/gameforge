@@ -51,21 +51,21 @@ class ArcadeScreen extends StatelessWidget {
                   isAvailable: true,
                   onTap: () => context.push('/arcade/snake'),
                 ).animate().fade(duration: 300.ms).slideY(begin: 0.2),
-                _ArcadeCard(
+                const _ArcadeCard(
                   title: 'Tetris',
                   emoji: '🧱',
                   subtitle: 'Coming soon',
                   isAvailable: false,
                   onTap: null,
                 ).animate(delay: 60.ms).fade(duration: 300.ms).slideY(begin: 0.2),
-                _ArcadeCard(
+                const _ArcadeCard(
                   title: 'Breakout',
                   emoji: '🏓',
                   subtitle: 'Coming soon',
                   isAvailable: false,
                   onTap: null,
                 ).animate(delay: 120.ms).fade(duration: 300.ms).slideY(begin: 0.2),
-                _ArcadeCard(
+                const _ArcadeCard(
                   title: 'Pong',
                   emoji: '🎯',
                   subtitle: 'Coming soon',
@@ -97,7 +97,7 @@ class _ArcadeCard extends StatelessWidget {
   });
 
   static final _fireDeep =
-      LinearGradient(colors: [AppColors.primary, AppColors.primary.withOpacity(0.55)]);
+      LinearGradient(colors: [AppColors.primary, AppColors.primary.withValues(alpha: 0.55)]);
 
   @override
   Widget build(BuildContext context) {
@@ -112,20 +112,20 @@ class _ArcadeCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             gradient: isAvailable
                 ? _fireDeep
-                : LinearGradient(
+                : const LinearGradient(
                     colors: [
                       AppColors.card2,
                       AppColors.card,
                     ],
                   ),
             border: Border.all(
-              color: isAvailable ? AppColors.fire2.withOpacity(0.65) : AppColors.border,
+              color: isAvailable ? AppColors.fire2.withValues(alpha: 0.65) : AppColors.border,
               width: isAvailable ? 1.8 : 1,
             ),
             boxShadow: isAvailable
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     ),
@@ -157,8 +157,8 @@ class _ArcadeCard extends StatelessWidget {
                       subtitle,
                       style: GoogleFonts.inter(
                         color: isAvailable
-                            ? Colors.white.withOpacity(0.82)
-                            : AppColors.textSecondary.withOpacity(0.65),
+                            ? Colors.white.withValues(alpha: 0.82)
+                            : AppColors.textSecondary.withValues(alpha: 0.65),
                         fontSize: 12,
                       ),
                     ),
@@ -194,7 +194,7 @@ class _ArcadeCard extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.28),
+                      color: Colors.black.withValues(alpha: 0.28),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

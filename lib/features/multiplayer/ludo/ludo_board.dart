@@ -4,6 +4,44 @@ import 'ludo_logic.dart';
 
 Color _playerColor(int idx) => Color(kPlayerColors[idx]);
 
+// ─── Coordinate Rotation Helpers ──────────────────────────────────────────────
+
+(int, int) _logicalToVisual(int lr, int lc, int myPlayerIdx) {
+  int vr = lr;
+  int vc = lc;
+  final rot = (myPlayerIdx - 3) % 4;
+  for (int i = 0; i < rot; i++) {
+    final prevV = vr;
+    vr = 14 - vc;
+    vc = prevV;
+  }
+  return (vr, vc);
+}
+
+(double, double) _logicalToVisualDouble(double lr, double lc, int myPlayerIdx) {
+  double vr = lr;
+  double vc = lc;
+  final rot = (myPlayerIdx - 3) % 4;
+  for (int i = 0; i < rot; i++) {
+    final prevV = vr;
+    vr = 14.0 - vc;
+    vc = prevV;
+  }
+  return (vr, vc);
+}
+
+(int, int) _visualToLogical(int vr, int vc, int myPlayerIdx) {
+  int lr = vr;
+  int lc = vc;
+  final rot = (myPlayerIdx - 3) % 4;
+  for (int i = 0; i < rot; i++) {
+    final prevL = lr;
+    lr = lc;
+    lc = 14 - prevL;
+  }
+  return (lr, lc);
+}
+
 // ─── Board Widget ─────────────────────────────────────────────────────────────
 
 class LudoBoard extends StatelessWidget {
@@ -32,7 +70,10 @@ class LudoBoard extends StatelessWidget {
             children: [
               CustomPaint(
                 size: Size(size, size),
-                painter: _LudoBoardPainter(numPlayers: state.numPlayers),
+                painter: _LudoBoardPainter(
+                  numPlayers: state.numPlayers,
+                  myPlayerIdx: myPlayerIdx,
+                ),
               ),
               for (int pi = 0; pi < state.numPlayers; pi++)
                 for (int ti = 0; ti < 4; ti++)
@@ -51,12 +92,14 @@ class LudoBoard extends StatelessWidget {
         playerIdx: pi,
         tokenIdx: ti,
         cell: cell,
+        myPlayerIdx: myPlayerIdx,
         isMovable: pi == myPlayerIdx && movableTokenIndices.contains(ti),
         onTap: () => onTokenTap(pi, ti),
       );
     }
 
-    final (r, c) = pos;
+    final (lr, lc) = pos;
+    final (r, c) = _logicalToVisual(lr, lc, myPlayerIdx);
     final isMovable = pi == myPlayerIdx && movableTokenIndices.contains(ti);
 
     return Positioned(
@@ -72,12 +115,12 @@ class LudoBoard extends StatelessWidget {
             shape: BoxShape.circle,
             color: _playerColor(pi),
             border: Border.all(
-              color: isMovable ? Colors.white : Colors.black.withOpacity(0.35),
+              color: isMovable ? Colors.white : Colors.black.withValues(alpha: 0.35),
               width: isMovable ? 2.6 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: _playerColor(pi).withOpacity(isMovable ? 0.95 : 0.45),
+                color: _playerColor(pi).withValues(alpha: isMovable ? 0.95 : 0.45),
                 blurRadius: isMovable ? 14 : 5,
                 spreadRadius: isMovable ? 2 : 0,
               ),
@@ -103,6 +146,7 @@ class _BaseToken extends StatelessWidget {
   final int playerIdx;
   final int tokenIdx;
   final double cell;
+  final int myPlayerIdx;
   final bool isMovable;
   final VoidCallback onTap;
 
@@ -110,6 +154,7 @@ class _BaseToken extends StatelessWidget {
     required this.playerIdx,
     required this.tokenIdx,
     required this.cell,
+    required this.myPlayerIdx,
     required this.isMovable,
     required this.onTap,
   });
@@ -132,10 +177,11 @@ class _BaseToken extends StatelessWidget {
 
     final (qr, qc) = quadrantOrigins[playerIdx];
     final (ir, ic) = innerOffsets[tokenIdx];
+    final (vr, vc) = _logicalToVisualDouble(qr + ir, qc + ic, myPlayerIdx);
 
     return Positioned(
-      left: (qc + ic) * cell,
-      top: (qr + ir) * cell,
+      left: vc * cell,
+      top: vr * cell,
       child: GestureDetector(
         onTap: isMovable ? onTap : null,
         child: AnimatedContainer(
@@ -146,13 +192,13 @@ class _BaseToken extends StatelessWidget {
             shape: BoxShape.circle,
             color: _playerColor(playerIdx),
             border: Border.all(
-              color: isMovable ? Colors.white : Colors.black.withOpacity(0.32),
+              color: isMovable ? Colors.white : Colors.black.withValues(alpha: 0.32),
               width: isMovable ? 2.6 : 1,
             ),
             boxShadow: [
               BoxShadow(
                 color:
-                    _playerColor(playerIdx).withOpacity(isMovable ? 0.95 : 0.35),
+                    _playerColor(playerIdx).withValues(alpha: isMovable ? 0.95 : 0.35),
                 blurRadius: isMovable ? 16 : 4,
                 spreadRadius: isMovable ? 2 : 0,
               ),
@@ -176,7 +222,8 @@ class _BaseToken extends StatelessWidget {
 
 class _LudoBoardPainter extends CustomPainter {
   final int numPlayers;
-  const _LudoBoardPainter({required this.numPlayers});
+  final int myPlayerIdx;
+  const _LudoBoardPainter({required this.numPlayers, required this.myPlayerIdx});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -186,14 +233,15 @@ class _LudoBoardPainter extends CustomPainter {
 
     for (int r = 0; r < 15; r++) {
       for (int c = 0; c < 15; c++) {
-        final color = _cellColor(r, c);
+        final (lr, lc) = _visualToLogical(r, c, myPlayerIdx);
+        final color = _cellColor(lr, lc);
         if (color == null) continue;
         final rect = Rect.fromLTWH(c * cell, r * cell, cell, cell);
         canvas.drawRect(rect, Paint()..color = color);
         canvas.drawRect(
           rect,
           Paint()
-            ..color = AppColors.border.withOpacity(0.35)
+            ..color = AppColors.border.withValues(alpha: 0.35)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 0.5,
         );
@@ -204,26 +252,27 @@ class _LudoBoardPainter extends CustomPainter {
     _drawHomeCenter(canvas, cell);
 
     for (final idx in kSafeIndices) {
-      final (r, c) = kMainPath[idx];
-      _drawStar(canvas, r, c, cell);
+      final (lr, lc) = kMainPath[idx];
+      final (vr, vc) = _logicalToVisual(lr, lc, myPlayerIdx);
+      _drawStar(canvas, vr, vc, cell);
     }
   }
 
   Color? _cellColor(int r, int c) {
-    if (r < 6 && c < 6) return _playerColor(0).withOpacity(0.16);
-    if (r < 6 && c > 8) return _playerColor(1).withOpacity(0.16);
-    if (r > 8 && c > 8) return _playerColor(2).withOpacity(0.16);
-    if (r > 8 && c < 6) return _playerColor(3).withOpacity(0.16);
+    if (r < 6 && c < 6) return _playerColor(0).withValues(alpha: 0.16);
+    if (r < 6 && c > 8) return _playerColor(1).withValues(alpha: 0.16);
+    if (r > 8 && c > 8) return _playerColor(2).withValues(alpha: 0.16);
+    if (r > 8 && c < 6) return _playerColor(3).withValues(alpha: 0.16);
 
-    if (r >= 1 && r <= 4 && c >= 1 && c <= 4) return _playerColor(0).withOpacity(0.38);
+    if (r >= 1 && r <= 4 && c >= 1 && c <= 4) return _playerColor(0).withValues(alpha: 0.38);
     if (r >= 1 && r <= 4 && c >= 10 && c <= 13) {
-      return _playerColor(1).withOpacity(0.38);
+      return _playerColor(1).withValues(alpha: 0.38);
     }
     if (r >= 10 && r <= 13 && c >= 10 && c <= 13) {
-      return _playerColor(2).withOpacity(0.38);
+      return _playerColor(2).withValues(alpha: 0.38);
     }
     if (r >= 10 && r <= 13 && c >= 1 && c <= 4) {
-      return _playerColor(3).withOpacity(0.38);
+      return _playerColor(3).withValues(alpha: 0.38);
     }
 
     final isPath = _isPathCell(r, c);
@@ -231,13 +280,13 @@ class _LudoBoardPainter extends CustomPainter {
 
     for (int pi = 0; pi < 4; pi++) {
       for (final (hr, hc) in kHomeTracks[pi]) {
-        if (hr == r && hc == c) return _playerColor(pi).withOpacity(0.33);
+        if (hr == r && hc == c) return _playerColor(pi).withValues(alpha: 0.33);
       }
     }
 
     for (final idx in kSafeIndices) {
       final (pr, pc) = kMainPath[idx];
-      if (pr == r && pc == c) return AppColors.primary.withOpacity(0.42);
+      if (pr == r && pc == c) return AppColors.primary.withValues(alpha: 0.42);
     }
 
     return AppColors.card2;
@@ -251,7 +300,7 @@ class _LudoBoardPainter extends CustomPainter {
 
   void _drawPathOutline(Canvas canvas, double cell) {
     final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.14)
+      ..color = AppColors.primary.withValues(alpha: 0.14)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     canvas.drawRect(
@@ -281,6 +330,8 @@ class _LudoBoardPainter extends CustomPainter {
       Offset(6 * cell, 6 * cell),
     ];
 
+    final rot = (myPlayerIdx - 3) % 4;
+
     for (int i = 0; i < 4; i++) {
       final path = Path()
         ..moveTo(corners[i].dx, corners[i].dy)
@@ -289,7 +340,7 @@ class _LudoBoardPainter extends CustomPainter {
         ..close();
       canvas.drawPath(
         path,
-        Paint()..color = _playerColor(i).withOpacity(0.62),
+        Paint()..color = _playerColor((i + rot) % 4).withValues(alpha: 0.62),
       );
     }
   }
@@ -302,7 +353,7 @@ class _LudoBoardPainter extends CustomPainter {
         text: '★',
         style: TextStyle(
           fontSize: 11,
-          color: AppColors.primary.withOpacity(0.95),
+          color: AppColors.primary.withValues(alpha: 0.95),
         ),
       ),
       textDirection: TextDirection.ltr,

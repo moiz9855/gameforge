@@ -154,16 +154,9 @@ class LudoState {
   int get currentPlayer => activePlayers[currentTurnSlot];
 
   static LudoState initial(int numPlayers) {
-    // 2-player: seats 0 (Cyan, TL) and 2 (Yellow, BR) — cross-pattern.
+    // 2-player: seats 0 (Red) and 1 (Blue)
     // 3-player: seats 0, 1, 2. 4-player: all four.
-    final List<int> seats;
-    if (numPlayers == 2) {
-      seats = [0, 2]; // diagonal cross
-    } else if (numPlayers == 3) {
-      seats = [0, 1, 2];
-    } else {
-      seats = [0, 1, 2, 3];
-    }
+    final seats = List.generate(numPlayers, (i) => i);
 
     final tokens = List.generate(
       4,

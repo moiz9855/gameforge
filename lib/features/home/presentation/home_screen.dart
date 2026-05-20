@@ -134,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.35),
+              color: AppColors.primary.withValues(alpha: 0.35),
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
@@ -179,10 +179,10 @@ class _FeaturedGameCard extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: AppColors.featuredCardGradient,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.primary.withOpacity(0.45)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.45)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.18),
+                color: AppColors.primary.withValues(alpha: 0.18),
                 blurRadius: 26,
                 offset: const Offset(0, 14),
               ),
@@ -203,7 +203,7 @@ class _FeaturedGameCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.primary.withOpacity(0.35),
+                              AppColors.primary.withValues(alpha: 0.35),
                               Colors.transparent,
                             ],
                             begin: Alignment.topCenter,
@@ -221,7 +221,7 @@ class _FeaturedGameCard extends StatelessWidget {
                           child: Icon(
                             Icons.gamepad_rounded,
                             size: 56,
-                            color: AppColors.primary.withOpacity(0.85),
+                            color: AppColors.primary.withValues(alpha: 0.85),
                           ),
                         ),
                       Positioned(
@@ -233,7 +233,7 @@ class _FeaturedGameCard extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.92),
+                            color: AppColors.primary.withValues(alpha: 0.92),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -274,7 +274,7 @@ class _FeaturedGameCard extends StatelessWidget {
                     const SizedBox(height: 14),
                     Row(
                       children: [
-                        Icon(Icons.play_circle_rounded,
+                        const Icon(Icons.play_circle_rounded,
                             color: AppColors.success, size: 18),
                         const SizedBox(width: 6),
                         Text(
@@ -285,7 +285,7 @@ class _FeaturedGameCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 18),
-                        Icon(Icons.favorite_rounded,
+                        const Icon(Icons.favorite_rounded,
                             color: AppColors.primary, size: 18),
                         const SizedBox(width: 6),
                         Text(
@@ -348,7 +348,7 @@ class _HorizontalGameTile extends StatelessWidget {
                             color: AppColors.card2,
                             child: Icon(
                               Icons.gamepad_outlined,
-                              color: AppColors.primary.withOpacity(0.7),
+                              color: AppColors.primary.withValues(alpha: 0.7),
                               size: 32,
                             ),
                           ),
@@ -378,7 +378,7 @@ class _HorizontalGameTile extends StatelessWidget {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.play_arrow_rounded,
+                          const Icon(Icons.play_arrow_rounded,
                               size: 15, color: AppColors.success),
                           Text(
                             ' ${game.playCount}',
@@ -388,7 +388,7 @@ class _HorizontalGameTile extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Icon(Icons.favorite_rounded,
+                          const Icon(Icons.favorite_rounded,
                               size: 14, color: AppColors.primary),
                           Text(
                             ' ${game.likeCount}',
@@ -403,7 +403,7 @@ class _HorizontalGameTile extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded,
-                    size: 16, color: AppColors.primary.withOpacity(0.8)),
+                    size: 16, color: AppColors.primary.withValues(alpha: 0.8)),
               ],
             ),
           ),

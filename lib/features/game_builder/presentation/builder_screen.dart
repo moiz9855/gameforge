@@ -75,7 +75,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedDifficulty,
+                    initialValue: selectedDifficulty,
                     dropdownColor: AppColors.surface,
                     decoration: const InputDecoration(
                       labelText: 'Difficulty',
@@ -224,13 +224,13 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen> {
               color: AppColors.surface,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, -5),
                 ),
               ],
             ),
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _ToolItem(type: GameObjectType.player, icon: Icons.person, label: 'Player'),
@@ -262,7 +262,7 @@ class _ToolItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.surfaceLight.withOpacity(0.8),
+            color: AppColors.surfaceLight.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: AppColors.fire2, size: 32),
@@ -285,7 +285,7 @@ class _ToolItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.5)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
           ),
           child: Icon(icon, color: AppColors.primary),
         ),
@@ -329,12 +329,12 @@ class _GameObjectWidget extends StatelessWidget {
       width: obj.width,
       height: obj.height,
       decoration: BoxDecoration(
-        color: color.withOpacity(0.8),
+        color: color.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(obj.type == GameObjectType.coin ? 20 : 4),
         border: Border.all(color: color, width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.5),
+            color: color.withValues(alpha: 0.5),
             blurRadius: 8,
           ),
         ],
@@ -350,7 +350,7 @@ class GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.surfaceLight.withOpacity(0.5)
+      ..color = AppColors.surfaceLight.withValues(alpha: 0.5)
       ..strokeWidth = 1;
 
     const double gridSize = 40;

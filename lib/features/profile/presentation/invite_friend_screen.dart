@@ -90,9 +90,9 @@ class _InviteFriendScreenState extends ConsumerState<InviteFriendScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.12),
+                color: AppColors.success.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.success.withOpacity(0.45)),
+                border: Border.all(color: AppColors.success.withValues(alpha: 0.45)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +160,7 @@ class _InviteFriendScreenState extends ConsumerState<InviteFriendScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.chat_rounded,
-                        color: AppColors.success.withOpacity(0.9)),
+                        color: AppColors.success.withValues(alpha: 0.9)),
                     const SizedBox(width: 10),
                     Text(
                       'Share via WhatsApp',

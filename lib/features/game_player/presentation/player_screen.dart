@@ -44,13 +44,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
   }
 
   void _initGame(List<GameObject> data) {
-    if (_game == null) {
-      _game = GameForgeEngine(
-        gameData: data,
-        onScoreChanged: _onScoreChanged,
-        onWin: _onWin,
-      );
-    }
+    _game ??= GameForgeEngine(
+      gameData: data,
+      onScoreChanged: _onScoreChanged,
+      onWin: _onWin,
+    );
   }
 
   @override
@@ -85,7 +83,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                           color: AppColors.gold,
                           fontSize: 22,
                           shadows: [
-                            Shadow(color: AppColors.primary.withOpacity(0.55), blurRadius: 14),
+                            Shadow(color: AppColors.primary.withValues(alpha: 0.55), blurRadius: 14),
                           ],
                         ),
                       ),
@@ -132,7 +130,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
               // Win Overlay
               if (_hasWon)
                 Container(
-                  color: AppColors.background.withOpacity(0.9),
+                  color: AppColors.background.withValues(alpha: 0.9),
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -193,11 +191,11 @@ class _ControlButton extends StatelessWidget {
         width: 64,
         height: 64,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
           shape: BoxShape.circle,
           border: Border.all(color: color, width: 2),
           boxShadow: [
-            BoxShadow(color: color.withOpacity(0.3), blurRadius: 10),
+            BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10),
           ],
         ),
         child: Icon(icon, color: Colors.white, size: 32),

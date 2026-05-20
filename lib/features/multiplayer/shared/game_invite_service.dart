@@ -30,7 +30,7 @@ class GameInviteService {
     int? ludoPlayers,
   }) async {
     final channel = supabase.channel('invites:$friendId');
-    await channel.subscribe();
+    channel.subscribe();
     final payload = {
       'from_username': myUsername,
       'from_user_id': myUserId,

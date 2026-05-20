@@ -123,6 +123,11 @@ class ChessNotifier extends StateNotifier<ChessState> {
     );
   }
 
+  /// Sets the state externally (e.g. for time-out handling).
+  void updateState(ChessState newState) {
+    state = newState;
+  }
+
   // ─── Private helpers ────────────────────────────────────────────────────
 
   String get _myRole => isCreator ? 'white' : 'black';

@@ -27,12 +27,12 @@ class GameCard extends StatelessWidget {
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.primary.withOpacity(0.35),
+            color: AppColors.primary.withValues(alpha: 0.35),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.05),
+              color: AppColors.primary.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -80,14 +80,14 @@ class GameCard extends StatelessWidget {
                         if (onEdit != null)
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.white),
-                            style: IconButton.styleFrom(backgroundColor: AppColors.primary.withOpacity(0.8)),
+                            style: IconButton.styleFrom(backgroundColor: AppColors.primary.withValues(alpha: 0.8)),
                             onPressed: onEdit,
                           ),
                         if (onDelete != null) ...[
                           const SizedBox(width: 8),
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.white),
-                            style: IconButton.styleFrom(backgroundColor: AppColors.error.withOpacity(0.8)),
+                            style: IconButton.styleFrom(backgroundColor: AppColors.error.withValues(alpha: 0.8)),
                             onPressed: onDelete,
                           ),
                         ]
@@ -108,7 +108,7 @@ class GameCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       shadows: [
                         Shadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 10,
                         ),
                       ],

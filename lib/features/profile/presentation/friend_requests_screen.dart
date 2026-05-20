@@ -102,7 +102,7 @@ class FriendRequestsScreen extends ConsumerWidget {
                               children: [
                                 CircleAvatar(
                                   backgroundColor:
-                                      AppColors.primary.withOpacity(0.15),
+                                      AppColors.primary.withValues(alpha: 0.15),
                                   child: Text(
                                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                                     style: const TextStyle(
@@ -197,7 +197,7 @@ class FriendRequestsScreen extends ConsumerWidget {
                           ),
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: AppColors.gold.withOpacity(0.15),
+                              backgroundColor: AppColors.gold.withValues(alpha: 0.15),
                               child: Text(
                                 name.isNotEmpty ? name[0].toUpperCase() : '?',
                                 style: const TextStyle(
@@ -289,7 +289,7 @@ class FriendRequestsScreen extends ConsumerWidget {
                               children: [
                                 CircleAvatar(
                                   backgroundColor:
-                                      AppColors.primary.withOpacity(0.15),
+                                      AppColors.primary.withValues(alpha: 0.15),
                                   child: Text(
                                     name.isNotEmpty ? name[0].toUpperCase() : '?',
                                     style: const TextStyle(

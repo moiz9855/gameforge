@@ -92,7 +92,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           color: AppColors.surface,
           border: Border(
             top: BorderSide(
-              color: AppColors.border.withOpacity(0.65),
+              color: AppColors.border.withValues(alpha: 0.65),
               width: 1,
             ),
           ),
@@ -177,7 +177,7 @@ class _BottomNavSlot extends StatelessWidget {
                 boxShadow: selected
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.55),
+                          color: AppColors.primary.withValues(alpha: 0.55),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -216,7 +216,7 @@ class _InviteDialog extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(26),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             colors: [
               AppColors.card,
               AppColors.card2,
@@ -225,10 +225,10 @@ class _InviteDialog extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.primary.withOpacity(0.55), width: 1.5),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.55), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.18),
+              color: AppColors.primary.withValues(alpha: 0.18),
               blurRadius: 28,
               spreadRadius: 4,
             ),

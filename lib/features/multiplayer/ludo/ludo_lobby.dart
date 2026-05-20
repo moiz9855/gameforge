@@ -26,7 +26,7 @@ class _LudoLobbyState extends State<LudoLobby> {
   ];
 
   String _newCode() {
-    final raw = Uuid().v4().replaceAll('-', '').toUpperCase();
+    final raw = const Uuid().v4().replaceAll('-', '').toUpperCase();
     return raw.substring(0, 6);
   }
 
@@ -54,7 +54,13 @@ class _LudoLobbyState extends State<LudoLobby> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.textSecondary,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
@@ -102,7 +108,7 @@ class _LudoLobbyState extends State<LudoLobby> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
                           color: selected
-                              ? AppColors.primary.withOpacity(0.14)
+                              ? AppColors.primary.withValues(alpha: 0.14)
                               : AppColors.card,
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
@@ -159,7 +165,7 @@ class _LudoLobbyState extends State<LudoLobby> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 18,
                       offset: const Offset(0, 10),
                     ),

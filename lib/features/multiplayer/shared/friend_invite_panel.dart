@@ -36,7 +36,7 @@ class FriendInvitePanel extends ConsumerWidget {
             color: AppColors.surfaceLight,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: color.withOpacity(0.3)),
+                color: color.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +57,7 @@ class FriendInvitePanel extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 16,
-                        backgroundColor: color.withOpacity(0.2),
+                        backgroundColor: color.withValues(alpha: 0.2),
                         child: Text(username[0].toUpperCase(),
                             style: TextStyle(
                                 color: color,
@@ -92,7 +92,7 @@ class FriendInvitePanel extends ConsumerWidget {
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         );
@@ -129,7 +129,7 @@ class _InviteButtonState extends State<_InviteButton> {
                       strokeWidth: 2, color: widget.color))
               : TextButton(
                   style: TextButton.styleFrom(
-                    backgroundColor: widget.color.withOpacity(0.1),
+                    backgroundColor: widget.color.withValues(alpha: 0.1),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8)),
                     padding: const EdgeInsets.symmetric(

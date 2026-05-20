@@ -55,16 +55,16 @@ class _UpdateDialogState extends State<UpdateDialog> {
         child: Container(
           padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [AppColors.card, AppColors.card2],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.primary.withOpacity(0.45)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.45)),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.2),
                 blurRadius: 24,
                 spreadRadius: 2,
               ),
@@ -81,7 +81,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   gradient: AppColors.fireGradient,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.45),
+                      color: AppColors.primary.withValues(alpha: 0.45),
                       blurRadius: 16,
                     ),
                   ],
@@ -111,8 +111,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
                     child: Icon(Icons.arrow_forward_rounded,
                         color: AppColors.primary, size: 20),
                   ),
@@ -221,7 +221,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primary.withOpacity(0.35),
+                            color: AppColors.primary.withValues(alpha: 0.35),
                             blurRadius: 12,
                             offset: const Offset(0, 6),
                           ),

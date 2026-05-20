@@ -36,7 +36,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primary.withOpacity(0.22),
+        indicatorColor: AppColors.primary.withValues(alpha: 0.22),
         surfaceTintColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.all(
           GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
@@ -101,7 +101,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           foregroundColor: Colors.white,
           backgroundColor: AppColors.primary,
-          disabledForegroundColor: AppColors.textSecondary.withOpacity(0.6),
+          disabledForegroundColor: AppColors.textSecondary.withValues(alpha: 0.6),
           disabledBackgroundColor: AppColors.card2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

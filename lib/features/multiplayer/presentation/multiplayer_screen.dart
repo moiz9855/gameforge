@@ -116,7 +116,7 @@ class _MultiGameRowCard extends StatelessWidget {
             border: Border.all(color: AppColors.border),
             boxShadow: [
               BoxShadow(
-                color: tint.withOpacity(0.08),
+                color: tint.withValues(alpha: 0.08),
                 blurRadius: 22,
                 offset: const Offset(0, 12),
               ),
@@ -130,9 +130,9 @@ class _MultiGameRowCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: tint.withOpacity(0.18),
+                    color: tint.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: tint.withOpacity(0.45)),
+                    border: Border.all(color: tint.withValues(alpha: 0.45)),
                   ),
                   child: Icon(icon, color: tint, size: 28),
                 ),
@@ -163,7 +163,7 @@ class _MultiGameRowCard extends StatelessWidget {
                   ),
                 ),
                 Icon(Icons.arrow_forward_ios_rounded,
-                    size: 16, color: tint.withOpacity(0.85)),
+                    size: 16, color: tint.withValues(alpha: 0.85)),
               ],
             ),
           ),

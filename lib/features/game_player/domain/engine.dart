@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame/events.dart';
-import 'package:flutter/foundation.dart';
 import 'package:game_forge/features/game_builder/domain/game_object.dart';
 import 'components.dart';
 
@@ -22,7 +21,7 @@ class GameForgeEngine extends FlameGame with HasKeyboardHandlerComponents, HasCo
   });
 
   @override
-  Color backgroundColor() => Color(0xFF0F0F13); // AppColors.background
+  Color backgroundColor() => const Color(0xFF0F0F13); // AppColors.background
 
   @override
   Future<void> onLoad() async {

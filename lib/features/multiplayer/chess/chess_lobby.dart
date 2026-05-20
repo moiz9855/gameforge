@@ -18,7 +18,7 @@ class _ChessLobbyState extends State<ChessLobby> {
   String _joinCode = '';
 
   String _newCode() {
-    final raw = Uuid().v4().replaceAll('-', '').toUpperCase();
+    final raw = const Uuid().v4().replaceAll('-', '').toUpperCase();
     return raw.substring(0, 6);
   }
 
@@ -42,7 +42,13 @@ class _ChessLobbyState extends State<ChessLobby> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.textSecondary,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
@@ -77,7 +83,7 @@ class _ChessLobbyState extends State<ChessLobby> {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.35),
+                      color: AppColors.primary.withValues(alpha: 0.35),
                       blurRadius: 18,
                       offset: const Offset(0, 8),
                     ),

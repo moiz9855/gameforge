@@ -14,7 +14,7 @@ class PlatformComponent extends PositionComponent with CollisionCallbacks {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = AppColors.textSecondary.withOpacity(0.8);
+    final paint = Paint()..color = AppColors.textSecondary.withValues(alpha: 0.8);
     canvas.drawRect(size.toRect(), paint);
     
     // Border
@@ -26,7 +26,7 @@ class PlatformComponent extends PositionComponent with CollisionCallbacks {
   }
 }
 
-class CoinComponent extends PositionComponent with CollisionCallbacks, HasGameRef<GameForgeEngine> {
+class CoinComponent extends PositionComponent with CollisionCallbacks, HasGameReference<GameForgeEngine> {
   CoinComponent({required Vector2 position, required Vector2 size})
       : super(position: position, size: size) {
     add(RectangleHitbox());
@@ -35,7 +35,7 @@ class CoinComponent extends PositionComponent with CollisionCallbacks, HasGameRe
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = AppColors.warning.withOpacity(0.8);
+    final paint = Paint()..color = AppColors.warning.withValues(alpha: 0.8);
     canvas.drawRRect(
       RRect.fromRectAndRadius(size.toRect(), const Radius.circular(20)),
       paint,
@@ -53,12 +53,12 @@ class CoinComponent extends PositionComponent with CollisionCallbacks, HasGameRe
   }
 
   void collect() {
-    gameRef.incrementScore();
+    game.incrementScore();
     removeFromParent();
   }
 }
 
-class ObstacleComponent extends PositionComponent with CollisionCallbacks, HasGameRef<GameForgeEngine> {
+class ObstacleComponent extends PositionComponent with CollisionCallbacks, HasGameReference<GameForgeEngine> {
   ObstacleComponent({required Vector2 position, required Vector2 size})
       : super(position: position, size: size) {
     add(RectangleHitbox());
@@ -67,7 +67,7 @@ class ObstacleComponent extends PositionComponent with CollisionCallbacks, HasGa
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = AppColors.error.withOpacity(0.8);
+    final paint = Paint()..color = AppColors.error.withValues(alpha: 0.8);
     canvas.drawRect(size.toRect(), paint);
     
     // Border
@@ -79,7 +79,7 @@ class ObstacleComponent extends PositionComponent with CollisionCallbacks, HasGa
   }
 }
 
-class PlayerComponent extends PositionComponent with KeyboardHandler, CollisionCallbacks, HasGameRef<GameForgeEngine> {
+class PlayerComponent extends PositionComponent with KeyboardHandler, CollisionCallbacks, HasGameReference<GameForgeEngine> {
   Vector2 velocity = Vector2.zero();
   final double gravity = 900;
   final double jumpSpeed = -400;
@@ -99,12 +99,12 @@ class PlayerComponent extends PositionComponent with KeyboardHandler, CollisionC
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    final paint = Paint()..color = AppColors.fire2.withOpacity(0.8);
+    final paint = Paint()..color = AppColors.fire2.withValues(alpha: 0.8);
     canvas.drawRect(size.toRect(), paint);
     
     // Glow effect
     final shadowPaint = Paint()
-      ..color = AppColors.fire2.withOpacity(0.5)
+      ..color = AppColors.fire2.withValues(alpha: 0.5)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
     canvas.drawRect(size.toRect(), shadowPaint);
     
@@ -135,7 +135,7 @@ class PlayerComponent extends PositionComponent with KeyboardHandler, CollisionC
     position += velocity * dt;
 
     // Floor boundary fallback
-    if (position.y > gameRef.size.y) {
+    if (position.y > game.size.y) {
       die();
     }
   }

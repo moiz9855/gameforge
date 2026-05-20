@@ -86,13 +86,13 @@ class _LudoDiceState extends State<LudoDice>
                 color: widget.canRoll ? null : AppColors.card2,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: accent.withOpacity(widget.canRoll ? 0 : 0.45),
+                  color: accent.withValues(alpha: widget.canRoll ? 0 : 0.45),
                   width: widget.canRoll ? 0 : 1,
                 ),
                 boxShadow: widget.canRoll
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.45),
+                          color: AppColors.primary.withValues(alpha: 0.45),
                           blurRadius: 18,
                           spreadRadius: 1,
                         )
@@ -132,7 +132,7 @@ class _PipsPainter extends CustomPainter {
         Offset(rx * size.width, ry * size.height),
         pipR,
         Paint()
-          ..color = color.withOpacity(0.35)
+          ..color = color.withValues(alpha: 0.35)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
     }

@@ -30,6 +30,9 @@ class LudoNotifier extends StateNotifier<LudoState> {
   /// Guard against applying the same broadcast event twice (race condition).
   String? _lastAppliedEventId;
 
+  /// Track if both/all players have joined the game channel
+  bool _hasSeenAllPlayers = false;
+
   LudoNotifier({
     required this.roomCode,
     required this.numPlayers,
@@ -108,17 +111,29 @@ class LudoNotifier extends StateNotifier<LudoState> {
                   for (final p in list) {
                     if (p is Presence) {
                       final val = p.payload['player'];
-                      if (val is int) onlinePlayerIndices.add(val);
-                      else if (val is num) onlinePlayerIndices.add(val.toInt());
+                      if (val is int) {
+                        onlinePlayerIndices.add(val);
+                      } else if (val is num) {
+                        onlinePlayerIndices.add(val.toInt());
+                      }
                     }
                   }
                 }
               }
-              // Check which active players are no longer online
-              for (final pi in List<int>.from(state.activePlayers)) {
-                if (!onlinePlayerIndices.contains(pi)) {
-                  state = removePlayer(state, pi);
-                  if (state.gameOver) return;
+
+              // Once all expected players have been seen online at least once,
+              // we lock this in and start enforcing forfeit/disconnect checks.
+              if (!_hasSeenAllPlayers && onlinePlayerIndices.length >= numPlayers) {
+                _hasSeenAllPlayers = true;
+              }
+
+              if (_hasSeenAllPlayers) {
+                // Check which active players are no longer online
+                for (final pi in List<int>.from(state.activePlayers)) {
+                  if (!onlinePlayerIndices.contains(pi)) {
+                    state = removePlayer(state, pi);
+                    if (state.gameOver) return;
+                  }
                 }
               }
             } catch (_) {}

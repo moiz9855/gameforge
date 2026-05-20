@@ -51,11 +51,11 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
       if (chess.turn == PieceColor.white) {
         final t = ref.read(whiteTimerProvider);
         if (t <= 0) {
-          ref.read(chessNotifierProvider.notifier).state = chess.copyWith(
+          ref.read(chessNotifierProvider.notifier).updateState(chess.copyWith(
                 gameOver: true,
                 winner: PieceColor.black,
                 statusMsg: 'Black wins on time!',
-              );
+              ));
           _clockTimer?.cancel();
         } else {
           ref.read(whiteTimerProvider.notifier).state = t - 1;
@@ -63,11 +63,11 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
       } else {
         final t = ref.read(blackTimerProvider);
         if (t <= 0) {
-          ref.read(chessNotifierProvider.notifier).state = chess.copyWith(
+          ref.read(chessNotifierProvider.notifier).updateState(chess.copyWith(
                 gameOver: true,
                 winner: PieceColor.white,
                 statusMsg: 'White wins on time!',
-              );
+              ));
           _clockTimer?.cancel();
         } else {
           ref.read(blackTimerProvider.notifier).state = t - 1;
@@ -274,9 +274,9 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
 
                 Color bg;
                 if (isSelected) {
-                  bg = AppColors.primary.withOpacity(0.82);
+                  bg = AppColors.primary.withValues(alpha: 0.82);
                 } else if (isHighlight) {
-                  bg = AppColors.primary.withOpacity(0.42);
+                  bg = AppColors.primary.withValues(alpha: 0.42);
                 } else {
                   bg = isLight
                       ? AppColors.chessSquareLight
@@ -298,7 +298,7 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
                             width: dotSize,
                             height: dotSize,
                             decoration: BoxDecoration(
-                              color: AppColors.fire2.withOpacity(0.95),
+                              color: AppColors.fire2.withValues(alpha: 0.95),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -309,7 +309,7 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.primary.withOpacity(0.95),
+                                color: AppColors.primary.withValues(alpha: 0.95),
                                 width: 3,
                               ),
                             ),
@@ -324,8 +324,8 @@ class _ChessScreenState extends ConsumerState<ChessScreen> {
                               shadows: [
                                 Shadow(
                                   color: piece.color == PieceColor.white
-                                      ? Colors.white.withOpacity(0.45)
-                                      : Colors.black.withOpacity(0.65),
+                                      ? Colors.white.withValues(alpha: 0.45)
+                                      : Colors.black.withValues(alpha: 0.65),
                                   blurRadius: 6,
                                 ),
                               ],
@@ -368,7 +368,7 @@ class _TimerBar extends StatelessWidget {
       labelColor = AppColors.textSecondary;
       timeColor = AppColors.muted;
     } else if (isActiveTurn) {
-      bg = AppColors.primary.withOpacity(0.14);
+      bg = AppColors.primary.withValues(alpha: 0.14);
       labelColor = AppColors.primary;
       timeColor = AppColors.primary;
     } else {
@@ -420,13 +420,13 @@ class _GameOverOverlay extends StatelessWidget {
     final isDraw = state.winner == null;
 
     return Container(
-      color: Colors.black.withOpacity(0.72),
+      color: Colors.black.withValues(alpha: 0.72),
       child: Center(
         child: Container(
           margin: const EdgeInsets.all(28),
           padding: const EdgeInsets.all(26),
           decoration: BoxDecoration(
-            color: AppColors.card.withOpacity(0.96),
+            color: AppColors.card.withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: AppColors.border),
           ),
