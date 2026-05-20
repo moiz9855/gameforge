@@ -1,0 +1,3 @@
+Save your app icon as 'app_icon.png' inside this folder, then run:
+flutter pub get
+dart run flutter_launcher_icons
