@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:game_forge/core/constants/app_colors.dart';
 import 'package:game_forge/core/services/update_service.dart';
@@ -25,15 +26,18 @@ class _UpdateDialogState extends State<UpdateDialog> {
       _progress = 0;
     });
     try {
+      await HapticFeedback.lightImpact();
       final path = await UpdateService.instance.downloadApk(
         url: widget.info.downloadUrl,
         onProgress: (p) {
           if (mounted) setState(() => _progress = p);
         },
       );
+      await HapticFeedback.heavyImpact();
       await UpdateService.instance.openDownloadedApk(path);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
+      await HapticFeedback.vibrate();
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -194,6 +198,33 @@ class _UpdateDialogState extends State<UpdateDialog> {
                   ),
                 ],
               ],
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.amber.withOpacity(0.3), width: 1),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Note: Because this is a manual APK install, Google Play Protect may warn you about an unverified developer. This is normal and safe for manual releases.',
+                        style: GoogleFonts.rajdhani(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 20),
               Row(
                 children: [

@@ -8,6 +8,7 @@ class GameForgeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final PreferredSizeWidget? bottom;
   final Widget? leading;
   final bool centerTitle;
+  final Widget? titleOverride;
 
   const GameForgeAppBar({
     super.key,
@@ -15,6 +16,7 @@ class GameForgeAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.bottom,
     this.leading,
     this.centerTitle = false,
+    this.titleOverride,
   });
 
   @override
@@ -35,9 +37,9 @@ class GameForgeAppBar extends StatelessWidget implements PreferredSizeWidget {
       surfaceTintColor: Colors.transparent,
       bottom: bottom,
       titleSpacing: 16,
-      title: const Align(
+      title: Align(
         alignment: Alignment.centerLeft,
-        child: GameForgeLogo(fontSize: 10),
+        child: titleOverride ?? const GameForgeLogo(fontSize: 10),
       ),
       actions: actions,
     );

@@ -10,6 +10,10 @@ import 'package:game_forge/features/profile/presentation/profile_screen.dart';
 import 'package:game_forge/features/profile/presentation/invite_friend_screen.dart';
 import 'package:game_forge/features/profile/presentation/friend_requests_screen.dart';
 import 'package:game_forge/features/arcade/games/snake/snake_screen.dart';
+import 'package:game_forge/features/arcade/games/tetris/tetris_screen.dart';
+import 'package:game_forge/features/arcade/games/flappy/flappy_screen.dart';
+import 'package:game_forge/features/arcade/games/pong/pong_screen.dart';
+import 'package:game_forge/features/arcade/presentation/retro_startup_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_lobby.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_waiting_room.dart';
@@ -49,7 +53,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
       GoRoute(path: '/invite-friend', builder: (c, s) => const InviteFriendScreen()),
       GoRoute(path: '/friend-requests', builder: (c, s) => const FriendRequestsScreen()),
+      GoRoute(
+        path: '/arcade',
+        redirect: (context, state) {
+          ref.read(shellTabProvider.notifier).state = 0;
+          return '/';
+        },
+      ),
+      GoRoute(path: '/arcade/startup', builder: (c, s) => const RetroStartupScreen()),
       GoRoute(path: '/arcade/snake', builder: (c, s) => const SnakeScreen()),
+      GoRoute(path: '/arcade/tetris', builder: (c, s) => const TetrisScreen()),
+      GoRoute(path: '/arcade/flappy', builder: (c, s) => const FlappyScreen()),
+      GoRoute(path: '/arcade/pong', builder: (c, s) => const PongScreen()),
       GoRoute(path: '/chess-lobby', builder: (c, s) => const ChessLobby()),
       GoRoute(
         path: '/chess-waiting/:roomCode',
