@@ -17,46 +17,34 @@ class UpdateService {
   static final UpdateService instance = UpdateService._();
 
   static int compareSemver(String a, String b) {
-    List<int> parts(String v) {
-      return v
-          .trim()
-          .split('.')
-          .map((e) => int.tryParse(e.trim()) ?? 0)
-          .toList();
-    }
-
-    final pa = parts(a);
-    final pb = parts(b);
-    final len = pa.length > pb.length ? pa.length : pb.length;
-    for (var i = 0; i < len; i++) {
-      final x = i < pa.length ? pa[i] : 0;
-      final y = i < pb.length ? pb[i] : 0;
-      if (x != y) return x.compareTo(y);
-    }
-    return 0;
+    return _AppVersion.parse(a).compareTo(_AppVersion.parse(b));
   }
 
   Future<UpdateInfo> checkForUpdate() async {
-    final pkg = await PackageInfo.fromPlatform();
-    final current = pkg.version;
-
-    if (kIsWeb || !Platform.isAndroid) {
-      return UpdateInfo.none(current);
-    }
-
     try {
+      final pkg = await PackageInfo.fromPlatform();
+      final current = '${pkg.version}+${pkg.buildNumber}';
+
+      if (kIsWeb || !Platform.isAndroid) {
+        return UpdateInfo.none(current);
+      }
+
       final uri = Uri.parse(UpdateConfig.versionJsonUrl);
       final res = await http.get(uri).timeout(const Duration(seconds: 15));
       if (res.statusCode < 200 || res.statusCode >= 300) {
         return UpdateInfo.none(current);
       }
 
-      final map = json.decode(res.body) as Map<String, dynamic>;
-      final remoteVersion = map['version'] as String? ?? '';
-      final minVersion = map['min_version'] as String? ?? '0.0.0';
-      final downloadUrl = map['download_url'] as String? ?? '';
-      final changelog = map['changelog'] as String? ?? '';
-      final forceFlag = map['force_update'] as bool? ?? false;
+      final decoded = json.decode(res.body);
+      if (decoded is! Map) {
+        return UpdateInfo.none(current);
+      }
+
+      final remoteVersion = decoded['version']?.toString() ?? '';
+      final minVersion = decoded['min_version']?.toString() ?? '0.0.0';
+      final downloadUrl = decoded['download_url']?.toString() ?? '';
+      final changelog = decoded['changelog']?.toString() ?? '';
+      final forceFlag = decoded['force_update'] == true;
 
       if (remoteVersion.isEmpty || downloadUrl.isEmpty) {
         return UpdateInfo.none(current);
@@ -80,7 +68,7 @@ class UpdateService {
       );
     } catch (e, st) {
       debugPrint('UpdateService.checkForUpdate failed: $e\n$st');
-      return UpdateInfo.none(current);
+      return UpdateInfo.none('0.0.0');
     }
   }
 
@@ -162,5 +150,47 @@ class UpdateService {
       await Permission.requestInstallPackages.request();
     }
     return OpenFile.open(path);
+  }
+}
+
+class _AppVersion implements Comparable<_AppVersion> {
+  final List<int> semverParts;
+  final int buildNumber;
+
+  _AppVersion(this.semverParts, this.buildNumber);
+
+  factory _AppVersion.parse(String v) {
+    final clean = v.trim();
+    if (clean.isEmpty) {
+      return _AppVersion([0, 0, 0], 0);
+    }
+
+    final parts = clean.split('+');
+    // Strip pre-release tag like -beta from the semver part
+    final semverStr = parts[0].split('-').first;
+    final buildStr = parts.length > 1 ? parts[1] : '';
+
+    final semverList = semverStr
+        .split('.')
+        .map((e) => int.tryParse(e.trim()) ?? 0)
+        .toList();
+
+    final buildNum = int.tryParse(buildStr.trim()) ?? 0;
+    return _AppVersion(semverList, buildNum);
+  }
+
+  @override
+  int compareTo(_AppVersion other) {
+    final len = semverParts.length > other.semverParts.length
+        ? semverParts.length
+        : other.semverParts.length;
+
+    for (var i = 0; i < len; i++) {
+      final x = i < semverParts.length ? semverParts[i] : 0;
+      final y = i < other.semverParts.length ? other.semverParts[i] : 0;
+      if (x != y) return x.compareTo(y);
+    }
+
+    return buildNumber.compareTo(other.buildNumber);
   }
 }
