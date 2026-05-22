@@ -26,6 +26,15 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
   int _pongHighScore = 0;
   int _flappyHighScore = 0;
 
+  // New game stats
+  int _rpsWins = 0;
+  int _rpsBestStreak = 0;
+  int _tttWins = 0;
+  int _tttDraws = 0;
+  int _towWins = 0;
+  double _towBestTime = 999.9;
+  int _runnerHighScore = 0;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +59,11 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
     final pongHs = await service.getHighScore('pong');
     final flappyHs = await service.getHighScore('flappy');
 
+    final rpsStats = await service.getRpsStats();
+    final tttStats = await service.getTttStats();
+    final towStats = await service.getTowStats();
+    final runnerHs = await service.getHighScore('runner');
+
     if (mounted) {
       setState(() {
         _achievements = achievements;
@@ -57,11 +71,19 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
         _tetrisHighScore = tetrisHs;
         _pongHighScore = pongHs;
         _flappyHighScore = flappyHs;
+        _rpsWins = rpsStats['wins'] ?? 0;
+        _rpsBestStreak = rpsStats['best_streak'] ?? 0;
+        _tttWins = tttStats['wins'] ?? 0;
+        _tttDraws = tttStats['draws'] ?? 0;
+        _towWins = towStats['wins'] as int? ?? 0;
+        _towBestTime = towStats['best_time'] as double? ?? 999.9;
+        _runnerHighScore = runnerHs;
       });
     }
   }
 
   Future<void> _resetProgress() async {
+    SoundService.instance.play(SoundType.buttonTap);
     // Show confirmation dialog in retro styling
     final confirm = await showDialog<bool>(
       context: context,
@@ -98,14 +120,20 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   OutlinedButton(
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: () {
+                      SoundService.instance.play(SoundType.buttonBack);
+                      Navigator.pop(context, false);
+                    },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.textSecondary),
                     ),
                     child: Text('CANCEL', style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white)),
                   ),
                   ElevatedButton(
-                    onPressed: () => Navigator.pop(context, true),
+                    onPressed: () {
+                      SoundService.instance.play(SoundType.buttonTap);
+                      Navigator.pop(context, true);
+                    },
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                     child: Text('RESET', style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white)),
                   ),
@@ -168,6 +196,9 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                     onPressed: () {
                       SoundService.instance.toggleMute();
                       HapticFeedback.lightImpact();
+                      if (!SoundService.instance.isMuted) {
+                        SoundService.instance.play(SoundType.buttonTap);
+                      }
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           duration: const Duration(seconds: 1),
@@ -198,7 +229,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() => _activeTab = 0);
-                          SoundService.instance.play(SoundType.tetrisMove);
+                          SoundService.instance.play(SoundType.buttonTap);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -223,7 +254,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                       child: GestureDetector(
                         onTap: () {
                           setState(() => _activeTab = 1);
-                          SoundService.instance.play(SoundType.tetrisMove);
+                          SoundService.instance.play(SoundType.buttonTap);
                           _loadData();
                         },
                         child: Container(
@@ -296,6 +327,36 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
           isAvailable: true,
           onTap: () => context.push('/arcade/pong').then((_) => _loadData()),
         ).animate(delay: 150.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'RPS',
+          emoji: '🤜',
+          subtitle: 'Wins: $_rpsWins  Streak: $_rpsBestStreak',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/rps').then((_) => _loadData()),
+        ).animate(delay: 200.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Tic Tac Toe',
+          emoji: '⭕',
+          subtitle: 'W: $_tttWins  D: $_tttDraws',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/ttt').then((_) => _loadData()),
+        ).animate(delay: 250.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Tug of War',
+          emoji: '🪢',
+          subtitle: _towBestTime < 999.0
+              ? 'Wins: $_towWins  Best: ${_towBestTime.toStringAsFixed(1)}s'
+              : 'Wins: $_towWins',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/tow').then((_) => _loadData()),
+        ).animate(delay: 300.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Runner',
+          emoji: '🏃',
+          subtitle: 'Best: $_runnerHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/runner').then((_) => _loadData()),
+        ).animate(delay: 350.ms).fade(duration: 250.ms).slideY(begin: 0.15),
       ],
     );
   }
@@ -437,7 +498,10 @@ class _ArcadeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        SoundService.instance.play(SoundType.buttonTap);
+        onTap?.call();
+      },
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),

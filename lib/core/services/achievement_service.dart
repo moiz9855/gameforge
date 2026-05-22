@@ -93,6 +93,24 @@ class AchievementService {
       description: 'Score 20 points in Flappy Bird.',
       badge: '🦅',
     ),
+    Achievement(
+      id: 'rps_streak',
+      title: 'Predictor',
+      description: 'Get a win streak of 5 in Rock Paper Scissors.',
+      badge: '🧠',
+    ),
+    Achievement(
+      id: 'ttt_hard',
+      title: 'Unbeatable Draw',
+      description: 'Draw or win against the Hard AI in Tic Tac Toe.',
+      badge: '🛡️',
+    ),
+    Achievement(
+      id: 'tow_speedrun',
+      title: 'Rope Master',
+      description: 'Win a Tug of War round in under 8 seconds.',
+      badge: '💪',
+    ),
   ];
 
   Future<void> init() async {
@@ -137,6 +155,14 @@ class AchievementService {
     await _prefs?.remove('tetris_hs');
     await _prefs?.remove('pong_hs');
     await _prefs?.remove('flappy_hs');
+    await _prefs?.remove('rps_wins');
+    await _prefs?.remove('rps_best_streak');
+    await _prefs?.remove('rps_current_streak');
+    await _prefs?.remove('ttt_wins');
+    await _prefs?.remove('ttt_losses');
+    await _prefs?.remove('ttt_draws');
+    await _prefs?.remove('tow_wins');
+    await _prefs?.remove('tow_best_time');
   }
 
   /// High score helper functions
@@ -175,5 +201,94 @@ class AchievementService {
     await init();
     await _prefs?.setBool('retro_coin_inserted', true);
     await unlock('first_coin');
+  }
+
+  /// Rock Paper Scissors Stats
+  Future<Map<String, int>> getRpsStats() async {
+    await init();
+    return {
+      'wins': _prefs?.getInt('rps_wins') ?? 0,
+      'best_streak': _prefs?.getInt('rps_best_streak') ?? 0,
+    };
+  }
+
+  Future<void> saveRpsMatchResult({required bool won, required int currentStreak}) async {
+    await init();
+    final wins = (_prefs?.getInt('rps_wins') ?? 0) + (won ? 1 : 0);
+    await _prefs?.setInt('rps_wins', wins);
+
+    final bestStreak = _prefs?.getInt('rps_best_streak') ?? 0;
+    if (currentStreak > bestStreak) {
+      await _prefs?.setInt('rps_best_streak', currentStreak);
+    }
+
+    if (currentStreak >= 5) {
+      await unlock('rps_streak');
+    }
+  }
+
+  Future<int> getRpsCurrentStreak() async {
+    await init();
+    return _prefs?.getInt('rps_current_streak') ?? 0;
+  }
+
+  Future<void> setRpsCurrentStreak(int streak) async {
+    await init();
+    await _prefs?.setInt('rps_current_streak', streak);
+  }
+
+  /// Tic Tac Toe Stats
+  Future<Map<String, int>> getTttStats() async {
+    await init();
+    return {
+      'wins': _prefs?.getInt('ttt_wins') ?? 0,
+      'losses': _prefs?.getInt('ttt_losses') ?? 0,
+      'draws': _prefs?.getInt('ttt_draws') ?? 0,
+    };
+  }
+
+  Future<void> saveTttResult({required String result, required String difficulty}) async {
+    await init();
+    if (result == 'win') {
+      final w = (_prefs?.getInt('ttt_wins') ?? 0) + 1;
+      await _prefs?.setInt('ttt_wins', w);
+    } else if (result == 'loss') {
+      final l = (_prefs?.getInt('ttt_losses') ?? 0) + 1;
+      await _prefs?.setInt('ttt_losses', l);
+    } else {
+      final d = (_prefs?.getInt('ttt_draws') ?? 0) + 1;
+      await _prefs?.setInt('ttt_draws', d);
+    }
+
+    if (difficulty == 'hard' && (result == 'win' || result == 'draw')) {
+      await unlock('ttt_hard');
+    }
+  }
+
+  /// Tug of War Stats
+  Future<Map<String, dynamic>> getTowStats() async {
+    await init();
+    return {
+      'wins': _prefs?.getInt('tow_wins') ?? 0,
+      'best_time': _prefs?.getDouble('tow_best_time') ?? 999.9,
+    };
+  }
+
+  Future<void> saveTowResult({required bool won, double? timeInSeconds}) async {
+    await init();
+    if (won) {
+      final w = (_prefs?.getInt('tow_wins') ?? 0) + 1;
+      await _prefs?.setInt('tow_wins', w);
+
+      if (timeInSeconds != null) {
+        final currentBest = _prefs?.getDouble('tow_best_time') ?? 999.9;
+        if (timeInSeconds < currentBest) {
+          await _prefs?.setDouble('tow_best_time', timeInSeconds);
+        }
+        if (timeInSeconds <= 8.0) {
+          await unlock('tow_speedrun');
+        }
+      }
+    }
   }
 }

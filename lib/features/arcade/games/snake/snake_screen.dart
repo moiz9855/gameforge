@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:game_forge/core/constants/app_colors.dart';
 import 'package:game_forge/core/widgets/gameforge_app_bar.dart';
+import 'package:game_forge/core/services/sound_service.dart';
 
 enum _Dir { up, down, left, right }
 
@@ -103,6 +104,10 @@ class _SnakeScreenState extends State<SnakeScreen> {
       if (newHead == _food) {
         _score++;
         _placeFood();
+        SoundService.instance.play(SoundType.snakeEat);
+        if (_score % 5 == 0) {
+          SoundService.instance.play(SoundType.snakeSpeedUp);
+        }
       } else {
         _snake.removeLast();
       }
@@ -113,6 +118,7 @@ class _SnakeScreenState extends State<SnakeScreen> {
     _timer?.cancel();
     _gameOver = true;
     _saveHigh();
+    SoundService.instance.play(SoundType.gameOver);
   }
 
   void _turn(_Dir d) {
@@ -120,7 +126,10 @@ class _SnakeScreenState extends State<SnakeScreen> {
     if (d == _Dir.down  && _dir == _Dir.up)    return;
     if (d == _Dir.left  && _dir == _Dir.right) return;
     if (d == _Dir.right && _dir == _Dir.left)  return;
-    _nextDir = d;
+    if (_nextDir != d) {
+      _nextDir = d;
+      SoundService.instance.play(SoundType.snakeMove);
+    }
   }
 
   void _onKey(KeyEvent event) {
@@ -142,7 +151,10 @@ class _SnakeScreenState extends State<SnakeScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           color: AppColors.textSecondary,
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            SoundService.instance.play(SoundType.buttonBack);
+            Navigator.pop(context);
+          },
         ),
         actions: [
           Padding(
@@ -228,7 +240,10 @@ class _SnakeScreenState extends State<SnakeScreen> {
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12)),
                                 ),
-                                onPressed: _start,
+                                onPressed: () {
+                                  SoundService.instance.play(SoundType.buttonTap);
+                                  _start();
+                                },
                                 icon: const Icon(Icons.replay, color: Colors.white),
                                 label: const Text('PLAY AGAIN',
                                     style: TextStyle(color: Colors.white,

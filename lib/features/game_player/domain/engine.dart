@@ -46,6 +46,12 @@ class GameForgeEngine extends FlameGame with HasKeyboardHandlerComponents, HasCo
         case GameObjectType.obstacle:
           add(ObstacleComponent(position: pos, size: size));
           break;
+        case GameObjectType.enemy:
+        case GameObjectType.spring:
+        case GameObjectType.key:
+        case GameObjectType.door:
+          // Implement physical engine components for these types in a future update
+          break;
       }
     }
   }

@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
@@ -16,6 +15,31 @@ enum SoundType {
   tetrisClear,
   gameOver,
   achievement,
+  // New game sounds
+  snakeEat,
+  snakeMove,
+  snakeSpeedUp,
+  buttonTap,
+  buttonBack,
+  difficultySelect,
+  countdownTick,
+  countdownGo,
+  winFanfare,
+  loseSound,
+  drawSound,
+  aiReveal,
+  placeO,
+  lineHighlight,
+  ropePull,
+  ropeSnap,
+  runnerStep,
+  runnerJump,
+  runnerSlide,
+  runnerHit,
+  powerupCollect,
+  shieldActivate,
+  magnetActivate,
+  speedBoost,
 }
 
 class SoundService {
@@ -51,8 +75,8 @@ class SoundService {
         _cachedPaths[type] = file.path;
       }
       
-      // Initialize a pool of AudioPlayers for overlapping playbacks
-      for (int i = 0; i < 4; i++) {
+      // Initialize a pool of 8 AudioPlayers for overlapping playbacks
+      for (int i = 0; i < 8; i++) {
         _pool.add(AudioPlayer());
       }
 
@@ -155,7 +179,7 @@ class SoundService {
         break;
 
       case SoundType.achievement:
-        // Funfare: C5 (0.07s), E5 (0.07s), G5 (0.07s), C6 (0.12s), G5 (0.07s), C6 (0.35s)
+        // Fanfare: C5 (0.07s), E5 (0.07s), G5 (0.07s), C6 (0.12s), G5 (0.07s), C6 (0.35s)
         final f1 = _synthSquare(frequency: 523.25, duration: 0.07, sampleRate: sampleRate, volume: 0.4);
         final f2 = _synthSquare(frequency: 659.25, duration: 0.07, sampleRate: sampleRate, volume: 0.4);
         final f3 = _synthSquare(frequency: 783.99, duration: 0.07, sampleRate: sampleRate, volume: 0.4);
@@ -163,6 +187,142 @@ class SoundService {
         final f5 = _synthSquare(frequency: 783.99, duration: 0.07, sampleRate: sampleRate, volume: 0.4);
         final f6 = _synthSquare(frequency: 1046.50, duration: 0.35, sampleRate: sampleRate, volume: 0.5);
         samples = [...f1, ...f2, ...f3, ...f4, ...f5, ...f6];
+        break;
+
+      case SoundType.snakeEat:
+        // Eating food: Quick upward sweep (Triangle wave munch/pop)
+        samples = _synthSweep(startFreq: 220.0, endFreq: 660.0, duration: 0.1, sampleRate: sampleRate, isTriangle: true, volume: 0.6);
+        break;
+
+      case SoundType.snakeMove:
+        // Subtle click on direction change
+        samples = _synthSquare(frequency: 800.0, duration: 0.03, sampleRate: sampleRate, volume: 0.25);
+        break;
+
+      case SoundType.snakeSpeedUp:
+        // Speed/level up jingle: 2 quick rising square tones
+        final p1 = _synthSquare(frequency: 587.33, duration: 0.08, sampleRate: sampleRate, volume: 0.4);
+        final p2 = _synthSquare(frequency: 880.0, duration: 0.18, sampleRate: sampleRate, volume: 0.5);
+        samples = [...p1, ...p2];
+        break;
+
+      case SoundType.buttonTap:
+        // Menu / standard click
+        samples = _synthSquare(frequency: 600.0, duration: 0.05, sampleRate: sampleRate, volume: 0.4);
+        break;
+
+      case SoundType.buttonBack:
+        // Back menu click (slightly lower pitch)
+        samples = _synthSquare(frequency: 400.0, duration: 0.06, sampleRate: sampleRate, volume: 0.4);
+        break;
+
+      case SoundType.difficultySelect:
+        // Difficulty select chime (two quick notes rising)
+        final d1 = _synthSquare(frequency: 700.0, duration: 0.04, sampleRate: sampleRate, volume: 0.35);
+        final d2 = _synthSquare(frequency: 900.0, duration: 0.08, sampleRate: sampleRate, volume: 0.4);
+        samples = [...d1, ...d2];
+        break;
+
+      case SoundType.countdownTick:
+        // Short beep for countdown 3, 2, 1
+        samples = _synthSquare(frequency: 523.25, duration: 0.07, sampleRate: sampleRate, volume: 0.4);
+        break;
+
+      case SoundType.countdownGo:
+        // Higher beep for countdown GO!
+        samples = _synthSquare(frequency: 1046.50, duration: 0.25, sampleRate: sampleRate, volume: 0.5);
+        break;
+
+      case SoundType.winFanfare:
+        // Victory chime arpeggio
+        final w1 = _synthSquare(frequency: 523.25, duration: 0.08, sampleRate: sampleRate, volume: 0.4);
+        final w2 = _synthSquare(frequency: 659.25, duration: 0.08, sampleRate: sampleRate, volume: 0.4);
+        final w3 = _synthSquare(frequency: 783.99, duration: 0.08, sampleRate: sampleRate, volume: 0.4);
+        final w4 = _synthSquare(frequency: 1046.50, duration: 0.25, sampleRate: sampleRate, volume: 0.5);
+        samples = [...w1, ...w2, ...w3, ...w4];
+        break;
+
+      case SoundType.loseSound:
+        // Fail chime arpeggio descending
+        final l1 = _synthSquare(frequency: 392.00, duration: 0.15, sampleRate: sampleRate, volume: 0.4);
+        final l2 = _synthSquare(frequency: 329.63, duration: 0.15, sampleRate: sampleRate, volume: 0.4);
+        final l3 = _synthSquare(frequency: 261.63, duration: 0.30, sampleRate: sampleRate, volume: 0.4);
+        samples = [...l1, ...l2, ...l3];
+        break;
+
+      case SoundType.drawSound:
+        // Neutral tone
+        final dr1 = _synthSquare(frequency: 440.00, duration: 0.15, sampleRate: sampleRate, volume: 0.4);
+        final dr2 = _synthSquare(frequency: 415.30, duration: 0.20, sampleRate: sampleRate, volume: 0.4);
+        samples = [...dr1, ...dr2];
+        break;
+
+      case SoundType.aiReveal:
+        // Suspense sweep before move reveal
+        samples = _synthSweep(startFreq: 200.0, endFreq: 400.0, duration: 0.2, sampleRate: sampleRate, isTriangle: false, volume: 0.4);
+        break;
+
+      case SoundType.placeO:
+        // Different click for AI O placement in TTT
+        samples = _synthSquare(frequency: 500.0, duration: 0.05, sampleRate: sampleRate, volume: 0.4);
+        break;
+
+      case SoundType.lineHighlight:
+        // Shine/sparkle sound (rapid pitch sweep up)
+        samples = _synthSweep(startFreq: 880.0, endFreq: 2200.0, duration: 0.25, sampleRate: sampleRate, isTriangle: true, volume: 0.5);
+        break;
+
+      case SoundType.ropePull:
+        // low-mid pull/struggle sound
+        samples = _synthSweep(startFreq: 150.0, endFreq: 80.0, duration: 0.08, sampleRate: sampleRate, isTriangle: false, volume: 0.5);
+        break;
+
+      case SoundType.ropeSnap:
+        // whip/snap sound (descending sweep with noise)
+        samples = _synthSweep(startFreq: 1000.0, endFreq: 150.0, duration: 0.15, sampleRate: sampleRate, isTriangle: false, volume: 0.7);
+        break;
+
+      case SoundType.runnerStep:
+        // Footstep (short low thump)
+        samples = _synthSquare(frequency: 100.0, duration: 0.03, sampleRate: sampleRate, volume: 0.15);
+        break;
+
+      case SoundType.runnerJump:
+        // Whoosh up
+        samples = _synthSweep(startFreq: 200.0, endFreq: 900.0, duration: 0.15, sampleRate: sampleRate, isTriangle: true, volume: 0.5);
+        break;
+
+      case SoundType.runnerSlide:
+        // Swoosh down
+        samples = _synthSweep(startFreq: 800.0, endFreq: 200.0, duration: 0.20, sampleRate: sampleRate, isTriangle: true, volume: 0.5);
+        break;
+
+      case SoundType.runnerHit:
+        // Obstacle crash sound
+        samples = _synthSweep(startFreq: 500.0, endFreq: 50.0, duration: 0.4, sampleRate: sampleRate, isTriangle: false, volume: 0.7);
+        break;
+
+      case SoundType.powerupCollect:
+        // Upward jingle
+        final pw1 = _synthSquare(frequency: 523.25, duration: 0.05, sampleRate: sampleRate, volume: 0.4);
+        final pw2 = _synthSquare(frequency: 783.99, duration: 0.05, sampleRate: sampleRate, volume: 0.4);
+        final pw3 = _synthSquare(frequency: 1046.50, duration: 0.15, sampleRate: sampleRate, volume: 0.5);
+        samples = [...pw1, ...pw2, ...pw3];
+        break;
+
+      case SoundType.shieldActivate:
+        // Shield bubble sound
+        samples = _synthSweep(startFreq: 600.0, endFreq: 1200.0, duration: 0.25, sampleRate: sampleRate, isTriangle: true, volume: 0.5);
+        break;
+
+      case SoundType.magnetActivate:
+        // Magnet buzz sound
+        samples = _synthSweep(startFreq: 300.0, endFreq: 500.0, duration: 0.25, sampleRate: sampleRate, isTriangle: false, volume: 0.5);
+        break;
+
+      case SoundType.speedBoost:
+        // Speed up sound
+        samples = _synthSweep(startFreq: 400.0, endFreq: 1600.0, duration: 0.35, sampleRate: sampleRate, isTriangle: false, volume: 0.5);
         break;
     }
 

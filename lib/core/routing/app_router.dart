@@ -13,6 +13,10 @@ import 'package:game_forge/features/arcade/games/snake/snake_screen.dart';
 import 'package:game_forge/features/arcade/games/tetris/tetris_screen.dart';
 import 'package:game_forge/features/arcade/games/flappy/flappy_screen.dart';
 import 'package:game_forge/features/arcade/games/pong/pong_screen.dart';
+import 'package:game_forge/features/arcade/games/rps/rps_screen.dart';
+import 'package:game_forge/features/arcade/games/ttt/ttt_screen.dart';
+import 'package:game_forge/features/arcade/games/tow/tow_screen.dart';
+import 'package:game_forge/features/arcade/games/runner/runner_screen.dart';
 import 'package:game_forge/features/arcade/presentation/retro_startup_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_lobby.dart';
@@ -65,6 +69,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/arcade/tetris', builder: (c, s) => const TetrisScreen()),
       GoRoute(path: '/arcade/flappy', builder: (c, s) => const FlappyScreen()),
       GoRoute(path: '/arcade/pong', builder: (c, s) => const PongScreen()),
+      GoRoute(path: '/arcade/rps', builder: (c, s) => const RpsScreen()),
+      GoRoute(path: '/arcade/ttt', builder: (c, s) => const TttScreen()),
+      GoRoute(path: '/arcade/tow', builder: (c, s) => const TowScreen()),
+      GoRoute(path: '/arcade/runner', builder: (c, s) => const RunnerScreen()),
       GoRoute(path: '/chess-lobby', builder: (c, s) => const ChessLobby()),
       GoRoute(
         path: '/chess-waiting/:roomCode',

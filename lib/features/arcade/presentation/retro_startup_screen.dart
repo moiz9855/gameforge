@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:game_forge/core/services/sound_service.dart';
-import 'package:game_forge/core/services/sound_service.dart';
 import 'package:game_forge/core/services/achievement_service.dart';
 import 'package:game_forge/core/widgets/crt_overlay.dart';
 
@@ -70,7 +69,7 @@ class _RetroStartupScreenState extends State<RetroStartupScreen> {
             _lineIndex++;
           });
           // Play a retro computer blip sound for each printed line
-          SoundService.instance.play(SoundType.tetrisMove);
+          SoundService.instance.play(SoundType.snakeMove);
           _printNextLine();
         }
       });
