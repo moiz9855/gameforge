@@ -40,6 +40,7 @@ enum SoundType {
   shieldActivate,
   magnetActivate,
   speedBoost,
+  error,
 }
 
 class SoundService {
@@ -323,6 +324,10 @@ class SoundService {
       case SoundType.speedBoost:
         // Speed up sound
         samples = _synthSweep(startFreq: 400.0, endFreq: 1600.0, duration: 0.35, sampleRate: sampleRate, isTriangle: false, volume: 0.5);
+        break;
+      case SoundType.error:
+        // Short descending buzz for wrong answer
+        samples = _synthSweep(startFreq: 600.0, endFreq: 200.0, duration: 0.25, sampleRate: sampleRate, isTriangle: true, volume: 0.55);
         break;
     }
 
