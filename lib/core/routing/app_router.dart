@@ -17,6 +17,16 @@ import 'package:game_forge/features/arcade/games/rps/rps_screen.dart';
 import 'package:game_forge/features/arcade/games/ttt/ttt_screen.dart';
 import 'package:game_forge/features/arcade/games/tow/tow_screen.dart';
 import 'package:game_forge/features/arcade/games/runner/runner_screen.dart';
+import 'package:game_forge/features/arcade/games/archery/archery_screen.dart';
+import 'package:game_forge/features/arcade/games/wave_survival/wave_survival_screen.dart';
+import 'package:game_forge/features/arcade/games/iq_puzzle/iq_puzzle_screen.dart';
+import 'package:game_forge/features/arcade/games/memory_match/memory_match_screen.dart';
+import 'package:game_forge/features/arcade/games/basketball/basketball_screen.dart';
+import 'package:game_forge/features/arcade/games/slingshot/slingshot_screen.dart';
+import 'package:game_forge/features/arcade/games/word_scramble/word_scramble_screen.dart';
+import 'package:game_forge/features/arcade/games/color_rush/color_rush_screen.dart';
+import 'package:game_forge/features/arcade/games/tower_stack/tower_stack_screen.dart';
+import 'package:game_forge/features/arcade/games/math_blaster/math_blaster_screen.dart';
 import 'package:game_forge/features/arcade/presentation/retro_startup_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_lobby.dart';
@@ -73,6 +83,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/arcade/ttt', builder: (c, s) => const TttScreen()),
       GoRoute(path: '/arcade/tow', builder: (c, s) => const TowScreen()),
       GoRoute(path: '/arcade/runner', builder: (c, s) => const RunnerScreen()),
+      GoRoute(path: '/arcade/archery', builder: (c, s) => const ArcheryScreen()),
+      GoRoute(path: '/arcade/wave_survival', builder: (c, s) => const WaveSurvivalScreen()),
+      GoRoute(path: '/arcade/iq_puzzle', builder: (c, s) => const IqPuzzleScreen()),
+      GoRoute(path: '/arcade/memory_match', builder: (c, s) => const MemoryMatchScreen()),
+      GoRoute(path: '/arcade/basketball', builder: (c, s) => const BasketballScreen()),
+      GoRoute(path: '/arcade/slingshot', builder: (c, s) => const SlingshotScreen()),
+      GoRoute(path: '/arcade/word_scramble', builder: (c, s) => const WordScrambleScreen()),
+      GoRoute(path: '/arcade/color_rush', builder: (c, s) => const ColorRushScreen()),
+      GoRoute(path: '/arcade/tower_stack', builder: (c, s) => const TowerStackScreen()),
+      GoRoute(path: '/arcade/math_blaster', builder: (c, s) => const MathBlasterScreen()),
       GoRoute(path: '/chess-lobby', builder: (c, s) => const ChessLobby()),
       GoRoute(
         path: '/chess-waiting/:roomCode',

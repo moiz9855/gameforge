@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:game_forge/core/services/sound_service.dart';
+import 'package:game_forge/core/services/progress_sync_service.dart';
+
 
 class Achievement {
   final String id;
@@ -189,6 +191,8 @@ class AchievementService {
         if (score >= 20) await unlock('sky_legend');
       }
     }
+    // Sync to Supabase in all cases
+    await ProgressSyncService.instance.saveProgress(gameId, highScore: score);
   }
 
   /// Check if coin has been inserted this session or historically
@@ -225,6 +229,13 @@ class AchievementService {
     if (currentStreak >= 5) {
       await unlock('rps_streak');
     }
+
+    final finalBest = _prefs?.getInt('rps_best_streak') ?? 0;
+    await ProgressSyncService.instance.saveProgress(
+      'rps',
+      highScore: wins,
+      extraData: {'wins': wins, 'best_streak': finalBest},
+    );
   }
 
   Future<int> getRpsCurrentStreak() async {
@@ -249,20 +260,30 @@ class AchievementService {
 
   Future<void> saveTttResult({required String result, required String difficulty}) async {
     await init();
+    int wins = _prefs?.getInt('ttt_wins') ?? 0;
+    int losses = _prefs?.getInt('ttt_losses') ?? 0;
+    int draws = _prefs?.getInt('ttt_draws') ?? 0;
+
     if (result == 'win') {
-      final w = (_prefs?.getInt('ttt_wins') ?? 0) + 1;
-      await _prefs?.setInt('ttt_wins', w);
+      wins++;
+      await _prefs?.setInt('ttt_wins', wins);
     } else if (result == 'loss') {
-      final l = (_prefs?.getInt('ttt_losses') ?? 0) + 1;
-      await _prefs?.setInt('ttt_losses', l);
+      losses++;
+      await _prefs?.setInt('ttt_losses', losses);
     } else {
-      final d = (_prefs?.getInt('ttt_draws') ?? 0) + 1;
-      await _prefs?.setInt('ttt_draws', d);
+      draws++;
+      await _prefs?.setInt('ttt_draws', draws);
     }
 
     if (difficulty == 'hard' && (result == 'win' || result == 'draw')) {
       await unlock('ttt_hard');
     }
+
+    await ProgressSyncService.instance.saveProgress(
+      'ttt',
+      highScore: wins,
+      extraData: {'wins': wins, 'losses': losses, 'draws': draws},
+    );
   }
 
   /// Tug of War Stats
@@ -276,9 +297,9 @@ class AchievementService {
 
   Future<void> saveTowResult({required bool won, double? timeInSeconds}) async {
     await init();
+    final wins = (_prefs?.getInt('tow_wins') ?? 0) + (won ? 1 : 0);
     if (won) {
-      final w = (_prefs?.getInt('tow_wins') ?? 0) + 1;
-      await _prefs?.setInt('tow_wins', w);
+      await _prefs?.setInt('tow_wins', wins);
 
       if (timeInSeconds != null) {
         final currentBest = _prefs?.getDouble('tow_best_time') ?? 999.9;
@@ -290,5 +311,12 @@ class AchievementService {
         }
       }
     }
+
+    final finalBestTime = _prefs?.getDouble('tow_best_time') ?? 999.9;
+    await ProgressSyncService.instance.saveProgress(
+      'tow',
+      highScore: wins,
+      extraData: {'wins': wins, 'best_time': finalBestTime},
+    );
   }
 }

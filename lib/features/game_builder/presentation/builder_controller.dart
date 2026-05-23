@@ -294,7 +294,8 @@ class BuilderController extends StateNotifier<BuilderState> {
     'Polishing the level...',
   ];
 
-  Future<bool> generateWithAI(String prompt, String apiKey) async {
+  Future<bool> generateWithAI(String prompt, [String? _unusedApiKey]) async {
+    const geminiKey = 'AIzaSyApxInFZQPGPK2H0iAMlgt8AzYRMSELX-0';
     if (prompt.trim().isEmpty) return false;
 
     state = state.copyWith(
@@ -318,22 +319,23 @@ class BuilderController extends StateNotifier<BuilderState> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://api.anthropic.com/v1/messages'),
+        Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$geminiKey'),
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
         },
         body: jsonEncode({
-          'model': 'claude-sonnet-4-20250514',
-          'max_tokens': 2048,
-          'system': _aiSystemPrompt,
-          'messages': [
+          'generationConfig': {
+            'responseMimeType': 'application/json'
+          },
+          'systemInstruction': {
+            'parts': [{'text': _aiSystemPrompt}]
+          },
+          'contents': [
             {
               'role': 'user',
-              'content': prompt,
+              'parts': [{'text': prompt}]
             }
-          ],
+          ]
         }),
       );
 
@@ -350,8 +352,8 @@ class BuilderController extends StateNotifier<BuilderState> {
       }
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
-      final content = body['content'] as List;
-      final text = content.first['text'] as String;
+      final candidates = body['candidates'] as List;
+      final text = candidates.first['content']['parts'].first['text'] as String;
 
       // Parse the JSON array from the response
       final jsonStr = _extractJson(text);

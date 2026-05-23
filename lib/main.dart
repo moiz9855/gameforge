@@ -10,6 +10,7 @@ import 'core/utils/supabase_config.dart';
 import 'core/services/update_service.dart';
 import 'core/widgets/update_dialog.dart';
 import 'core/services/achievement_service.dart';
+import 'core/services/progress_sync_service.dart';
 import 'features/auth/presentation/auth_controller.dart';
 
 void main() async {
@@ -82,6 +83,12 @@ class _GameForgeAppState extends ConsumerState<GameForgeApp> {
 
     ref.listen<AsyncValue<AuthState>>(authStateProvider, (prev, next) {
       next.whenData((authState) {
+        final wasAuthed = prev?.valueOrNull?.session != null;
+        final isAuthed = authState.session != null;
+        if (isAuthed && !wasAuthed) {
+          ProgressSyncService.instance.syncFromSupabase();
+        }
+
         if (authState.session == null) return;
         if (_updateCheckScheduled) return;
         if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {

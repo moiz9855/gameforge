@@ -35,6 +35,18 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
   double _towBestTime = 999.9;
   int _runnerHighScore = 0;
 
+  // New games high scores
+  int _archeryHighScore = 0;
+  int _waveHighScore = 0;
+  int _iqHighScore = 0;
+  int _memoryHighScore = 0;
+  int _basketballHighScore = 0;
+  int _slingshotHighScore = 0;
+  int _wordHighScore = 0;
+  int _colorHighScore = 0;
+  int _towerHighScore = 0;
+  int _mathHighScore = 0;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +75,16 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
     final tttStats = await service.getTttStats();
     final towStats = await service.getTowStats();
     final runnerHs = await service.getHighScore('runner');
+    final archeryHs = await service.getHighScore('archery');
+    final waveHs = await service.getHighScore('wave_survival');
+    final iqHs = await service.getHighScore('iq_puzzle');
+    final memoryHs = await service.getHighScore('memory_match');
+    final basketballHs = await service.getHighScore('basketball');
+    final slingshotHs = await service.getHighScore('slingshot');
+    final wordHs = await service.getHighScore('word_scramble');
+    final colorHs = await service.getHighScore('color_rush');
+    final towerHs = await service.getHighScore('tower_stack');
+    final mathHs = await service.getHighScore('math_blaster');
 
     if (mounted) {
       setState(() {
@@ -78,6 +100,16 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
         _towWins = towStats['wins'] as int? ?? 0;
         _towBestTime = towStats['best_time'] as double? ?? 999.9;
         _runnerHighScore = runnerHs;
+        _archeryHighScore = archeryHs;
+        _waveHighScore = waveHs;
+        _iqHighScore = iqHs;
+        _memoryHighScore = memoryHs;
+        _basketballHighScore = basketballHs;
+        _slingshotHighScore = slingshotHs;
+        _wordHighScore = wordHs;
+        _colorHighScore = colorHs;
+        _towerHighScore = towerHs;
+        _mathHighScore = mathHs;
       });
     }
   }
@@ -357,6 +389,76 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
           isAvailable: true,
           onTap: () => context.push('/arcade/runner').then((_) => _loadData()),
         ).animate(delay: 350.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Archery',
+          emoji: '🎯',
+          subtitle: 'Best: $_archeryHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/archery').then((_) => _loadData()),
+        ).animate(delay: 400.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Survival',
+          emoji: '🌊',
+          subtitle: 'Best: $_waveHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/wave_survival').then((_) => _loadData()),
+        ).animate(delay: 450.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'River Cross',
+          emoji: '🧠',
+          subtitle: _iqHighScore > 0 ? 'Best: $_iqHighScore moves' : 'Not Cleared',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/iq_puzzle').then((_) => _loadData()),
+        ).animate(delay: 500.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Match Match',
+          emoji: '🃏',
+          subtitle: _memoryHighScore > 0 ? 'Best: $_memoryHighScore moves' : 'Not Cleared',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/memory_match').then((_) => _loadData()),
+        ).animate(delay: 550.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Hoop Master',
+          emoji: '🏀',
+          subtitle: 'Best: $_basketballHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/basketball').then((_) => _loadData()),
+        ).animate(delay: 600.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Slingshot',
+          emoji: '🎪',
+          subtitle: 'Best: $_slingshotHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/slingshot').then((_) => _loadData()),
+        ).animate(delay: 650.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Word Blast',
+          emoji: '🔤',
+          subtitle: 'Best: $_wordHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/word_scramble').then((_) => _loadData()),
+        ).animate(delay: 700.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Color Rush',
+          emoji: '🎨',
+          subtitle: 'Best: $_colorHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/color_rush').then((_) => _loadData()),
+        ).animate(delay: 750.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Tower Stack',
+          emoji: '🏗️',
+          subtitle: 'Best: $_towerHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/tower_stack').then((_) => _loadData()),
+        ).animate(delay: 800.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+        _ArcadeCard(
+          title: 'Math Blaster',
+          emoji: '➕',
+          subtitle: 'Best: $_mathHighScore',
+          isAvailable: true,
+          onTap: () => context.push('/arcade/math_blaster').then((_) => _loadData()),
+        ).animate(delay: 850.ms).fade(duration: 250.ms).slideY(begin: 0.15),
       ],
     );
   }

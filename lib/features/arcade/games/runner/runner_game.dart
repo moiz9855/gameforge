@@ -68,8 +68,8 @@ class RunnerGame extends FlameGame {
     laneCenters =
         List.generate(laneCount, (i) => laneWidth * i + laneWidth / 2);
 
-    // pre-generate skyline
-    for (int i = 0; i < 28; i++) {
+    // pre-generate skyline (reduced to 8 for performance)
+    for (int i = 0; i < 8; i++) {
       _bldgs.add(_Bldg.random(size, rng));
     }
 
@@ -104,12 +104,9 @@ class RunnerGame extends FlameGame {
 
     player.reset();
 
-    children.whereType<Obstacle>().toList().forEach((c) => c.removeFromParent());
-    children.whereType<GameCoin>().toList().forEach((c) => c.removeFromParent());
-    children
-        .whereType<GamePowerUp>()
-        .toList()
-        .forEach((c) => c.removeFromParent());
+    for (final c in children.whereType<Obstacle>()) { c.isActive = false; }
+    for (final c in children.whereType<GameCoin>()) { c.isActive = false; }
+    for (final p in children.whereType<GamePowerUp>()) { p.isActive = false; }
   }
 
   // ─────────────────────────────────────────────────
@@ -164,6 +161,7 @@ class RunnerGame extends FlameGame {
     // ── magnet pull ──
     if (magnetActive) {
       for (final c in children.whereType<GameCoin>()) {
+        if (!c.isActive) continue;
         final dx = player.x - c.x;
         final dy = player.y - c.y;
         final d = sqrt(dx * dx + dy * dy);
@@ -182,16 +180,21 @@ class RunnerGame extends FlameGame {
 
   // ─────────────────────────────────────────────────
   void _checkCollisions() {
-    final pr = Rect.fromCenter(
-      center: Offset(player.x, player.y),
-      width: player.width - 14,
-      height: player.currentHeight - 8,
-    );
+    final px = player.x;
+    final py = player.y;
+    final pw = player.width - 14;
+    final ph = player.currentHeight - 8;
 
-    for (final obs in children.whereType<Obstacle>().toList()) {
-      final or2 = Rect.fromCenter(
-          center: Offset(obs.x, obs.y), width: obs.width, height: obs.height);
-      if (!pr.overlaps(or2)) continue;
+    bool _aabb(double x2, double y2, double w2, double h2) {
+      return (px - pw / 2) < (x2 + w2 / 2) &&
+             (px + pw / 2) > (x2 - w2 / 2) &&
+             (py - ph / 2) < (y2 + h2 / 2) &&
+             (py + ph / 2) > (y2 - h2 / 2);
+    }
+
+    for (final obs in children.whereType<Obstacle>()) {
+      if (!obs.isActive) continue;
+      if (!_aabb(obs.x, obs.y, obs.width, obs.height)) continue;
 
       if (obs.type == ObstacleType.low &&
           player.state == PlayerState.jumping) {
@@ -204,7 +207,7 @@ class RunnerGame extends FlameGame {
 
       if (shieldActive) {
         shieldActive = false;
-        obs.removeFromParent();
+        obs.isActive = false;
         SoundService.instance.play(SoundType.wallHit);
         continue;
       }
@@ -213,22 +216,20 @@ class RunnerGame extends FlameGame {
       return;
     }
 
-    for (final c in children.whereType<GameCoin>().toList()) {
-      final cr =
-          Rect.fromCenter(center: Offset(c.x, c.y), width: 26, height: 26);
-      if (pr.overlaps(cr)) {
+    for (final c in children.whereType<GameCoin>()) {
+      if (!c.isActive) continue;
+      if (_aabb(c.x, c.y, 26, 26)) {
         coinsCollected++;
-        c.removeFromParent();
+        c.isActive = false;
         SoundService.instance.play(SoundType.coin);
       }
     }
 
-    for (final p in children.whereType<GamePowerUp>().toList()) {
-      final pr2 =
-          Rect.fromCenter(center: Offset(p.x, p.y), width: 30, height: 30);
-      if (pr.overlaps(pr2)) {
+    for (final p in children.whereType<GamePowerUp>()) {
+      if (!p.isActive) continue;
+      if (_aabb(p.x, p.y, 30, 30)) {
         _activate(p.type);
-        p.removeFromParent();
+        p.isActive = false;
         SoundService.instance.play(SoundType.powerupCollect);
       }
     }
@@ -260,24 +261,37 @@ class RunnerGame extends FlameGame {
         : r < 0.75
             ? ObstacleType.low
             : ObstacleType.high;
-    add(Obstacle(gameRef: this, lane: lane, type: type));
+            
+    final existing = children.whereType<Obstacle>().where((o) => !o.isActive).firstOrNull;
+    if (existing != null) {
+      existing.reset(lane, type);
+    } else {
+      add(Obstacle(gameRef: this, lane: lane, type: type));
+    }
   }
 
   void _spawnCoins() {
     final lane = rng.nextInt(laneCount);
     final count = 2 + rng.nextInt(3);
     for (int i = 0; i < count; i++) {
-      add(GameCoin(gameRef: this, lane: lane, startY: -20.0 - i * 44));
+      final existing = children.whereType<GameCoin>().where((c) => !c.isActive).firstOrNull;
+      if (existing != null) {
+        existing.reset(lane, -20.0 - i * 44);
+      } else {
+        add(GameCoin(gameRef: this, lane: lane, startY: -20.0 - i * 44));
+      }
     }
   }
 
   void _spawnPowerUp() {
     final lane = rng.nextInt(laneCount);
-    add(GamePowerUp(
-      gameRef: this,
-      lane: lane,
-      type: PowerUpType.values[rng.nextInt(3)],
-    ));
+    final type = PowerUpType.values[rng.nextInt(3)];
+    final existing = children.whereType<GamePowerUp>().where((p) => !p.isActive).firstOrNull;
+    if (existing != null) {
+      existing.reset(lane, type);
+    } else {
+      add(GamePowerUp(gameRef: this, lane: lane, type: type));
+    }
   }
 
   // ─────────────────────────────────────────────────
@@ -337,13 +351,7 @@ class RunnerGame extends FlameGame {
       final sy = (b.baseY + _roadScroll * 0.12) % (size.y * 0.45);
       final bRect = Rect.fromLTWH(b.x, sy - b.h, b.w, b.h);
       canvas.drawRect(bRect, Paint()..color = const Color(0xFF0C0C18));
-      // neon windows (pre-generated)
-      for (final w in b.wins) {
-        canvas.drawRect(
-          Rect.fromLTWH(b.x + w.dx, sy - b.h + w.dy, 3, 4),
-          Paint()..color = Color.fromRGBO(240, 90, 40, b.glow),
-        );
-      }
+      // Neon windows logic removed to save draw calls
     }
 
     // horizon neon line
@@ -525,8 +533,7 @@ class RunnerPlayer extends PositionComponent {
       30,
       Paint()
         ..color = const Color(0xFFF05A28)
-            .withValues(alpha: gameRef.shieldActive ? 0.28 : 0.1)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16),
+            .withValues(alpha: gameRef.shieldActive ? 0.28 : 0.1),
     );
 
     // shield ring
@@ -546,8 +553,7 @@ class RunnerPlayer extends PositionComponent {
         Offset(cx, cy),
         32,
         Paint()
-          ..color = const Color(0xFFAB47BC).withValues(alpha: 0.2)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+          ..color = const Color(0xFFAB47BC).withValues(alpha: 0.2),
       );
     }
     // boost aura
@@ -556,8 +562,7 @@ class RunnerPlayer extends PositionComponent {
         Offset(cx, cy),
         28,
         Paint()
-          ..color = const Color(0xFFFFD54F).withValues(alpha: 0.18)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+          ..color = const Color(0xFFFFD54F).withValues(alpha: 0.18),
       );
     }
 
@@ -609,14 +614,17 @@ class RunnerPlayer extends PositionComponent {
 // ═══════════════════════════════════════════════════════════
 class Obstacle extends PositionComponent {
   final RunnerGame gameRef;
-  final int lane;
-  final ObstacleType type;
+  int lane;
+  ObstacleType type;
+  bool isActive = true;
 
   Obstacle({required this.gameRef, required this.lane, required this.type})
       : super(anchor: Anchor.center);
 
-  @override
-  Future<void> onLoad() async {
+  void reset(int newLane, ObstacleType newType) {
+    lane = newLane;
+    type = newType;
+    isActive = true;
     x = gameRef.laneCenters[lane];
     y = -40;
     switch (type) {
@@ -630,14 +638,21 @@ class Obstacle extends PositionComponent {
   }
 
   @override
+  Future<void> onLoad() async {
+    reset(lane, type);
+  }
+
+  @override
   void update(double dt) {
+    if (!isActive) return;
     super.update(dt);
     y += gameRef.currentSpeed * dt;
-    if (y > gameRef.size.y + 60) removeFromParent();
+    if (y > gameRef.size.y + 60) isActive = false;
   }
 
   @override
   void render(Canvas canvas) {
+    if (!isActive) return;
     final cx = size.x / 2;
     final cy = size.y / 2;
     final rect = Rect.fromCenter(center: Offset(cx, cy), width: width, height: height);
@@ -668,9 +683,7 @@ class Obstacle extends PositionComponent {
     // glow
     canvas.drawRRect(
         RRect.fromRectAndRadius(rect.inflate(3), const Radius.circular(6)),
-        Paint()
-          ..color = border.withValues(alpha: 0.12)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+        Paint()..color = border.withValues(alpha: 0.12));
 
     // directional hints
     if (type == ObstacleType.low) {
@@ -704,10 +717,18 @@ class Obstacle extends PositionComponent {
 // ═══════════════════════════════════════════════════════════
 class GameCoin extends PositionComponent {
   final RunnerGame gameRef;
-  final int lane;
+  int lane;
+  bool isActive = true;
 
   GameCoin({required this.gameRef, required this.lane, double startY = -20})
       : super(anchor: Anchor.center, size: Vector2.all(20)) {
+    y = startY;
+  }
+
+  void reset(int newLane, double startY) {
+    lane = newLane;
+    isActive = true;
+    x = gameRef.laneCenters[lane];
     y = startY;
   }
 
@@ -718,13 +739,15 @@ class GameCoin extends PositionComponent {
 
   @override
   void update(double dt) {
+    if (!isActive) return;
     super.update(dt);
     y += gameRef.currentSpeed * dt;
-    if (y > gameRef.size.y + 30) removeFromParent();
+    if (y > gameRef.size.y + 30) isActive = false;
   }
 
   @override
   void render(Canvas canvas) {
+    if (!isActive) return;
     final cx = size.x / 2;
     final cy = size.y / 2;
 
@@ -732,9 +755,7 @@ class GameCoin extends PositionComponent {
     canvas.drawCircle(
         Offset(cx, cy),
         14,
-        Paint()
-          ..color = const Color(0xFFF05A28).withValues(alpha: 0.18)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+        Paint()..color = const Color(0xFFF05A28).withValues(alpha: 0.18));
     // body
     canvas.drawCircle(
         Offset(cx, cy), 10, Paint()..color = const Color(0xFFF05A28));
@@ -757,13 +778,23 @@ class GameCoin extends PositionComponent {
 // ═══════════════════════════════════════════════════════════
 class GamePowerUp extends PositionComponent {
   final RunnerGame gameRef;
-  final int lane;
-  final PowerUpType type;
+  int lane;
+  PowerUpType type;
+  bool isActive = true;
   double _pulse = 0;
 
   GamePowerUp(
       {required this.gameRef, required this.lane, required this.type})
       : super(anchor: Anchor.center, size: Vector2.all(32));
+
+  void reset(int newLane, PowerUpType newType) {
+    lane = newLane;
+    type = newType;
+    isActive = true;
+    x = gameRef.laneCenters[lane];
+    y = -30;
+    _pulse = 0;
+  }
 
   @override
   Future<void> onLoad() async {
@@ -773,14 +804,16 @@ class GamePowerUp extends PositionComponent {
 
   @override
   void update(double dt) {
+    if (!isActive) return;
     super.update(dt);
     y += gameRef.currentSpeed * dt;
     _pulse += dt;
-    if (y > gameRef.size.y + 40) removeFromParent();
+    if (y > gameRef.size.y + 40) isActive = false;
   }
 
   @override
   void render(Canvas canvas) {
+    if (!isActive) return;
     final cx = size.x / 2;
     final cy = size.y / 2;
 
@@ -804,9 +837,7 @@ class GamePowerUp extends PositionComponent {
     canvas.drawCircle(
         Offset(cx, cy),
         r + 6,
-        Paint()
-          ..color = color.withValues(alpha: 0.2)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8));
+        Paint()..color = color.withValues(alpha: 0.2));
     // body
     canvas.drawCircle(
         Offset(cx, cy), r, Paint()..color = color.withValues(alpha: 0.85));
