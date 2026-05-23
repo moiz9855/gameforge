@@ -203,7 +203,8 @@ class SlingshotGame extends FlameGame with PanDetector {
     
     // Draw elastic band
     if (state == SBGameState.aiming && dragStart != null && dragCurrent != null) {
-      final pull = (dragStart! - dragCurrent!).clamp(Vector2(-60, -60), Vector2(60, 60));
+      final pull = dragStart! - dragCurrent!;
+      pull.clamp(Vector2(-60, -60), Vector2(60, 60));
       final pullPos = slingPos - pull;
       final bandP = Paint()..color = const Color(0xFFE57373)..strokeWidth = 3;
       canvas.drawLine(Offset(slingPos.x - 15, slingPos.y - 20), pullPos.toOffset(), bandP);

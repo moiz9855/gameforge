@@ -232,7 +232,7 @@ class _WaveSurvivalScreenState extends State<WaveSurvivalScreen> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                _game?.startGame();
+                _game?.showSetup();
               },
               style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF05A28)),
               child: Text('RETRY', style: GoogleFonts.pressStart2p(fontSize: 12, color: Colors.white)),

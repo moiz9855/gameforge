@@ -7,7 +7,7 @@ import 'package:game_forge/core/services/sound_service.dart';
 
 enum TSGameState { playing, gameOver }
 
-class TowerStackGame extends FlameGame with TapDetector {
+class TowerStackGame extends FlameGame {
   final void Function(int score, int height, int bestScore)? onStateUpdate;
   final void Function(int score, bool newRecord)? onGameOver;
   int bestScore;
@@ -67,8 +67,7 @@ class TowerStackGame extends FlameGame with TapDetector {
     add(currentBlock);
   }
 
-  @override
-  void onTapDown(TapDownInfo info) {
+  void handleTap() {
     if (state != TSGameState.playing) return;
     
     final lastBlock = blocks.last;

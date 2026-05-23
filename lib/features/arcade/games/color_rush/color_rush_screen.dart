@@ -97,7 +97,7 @@ class _ColorRushScreenState extends State<ColorRushScreen> {
         child: CrtOverlay(
           child: Stack(
             children: [
-              GameWidget(game: _game!),
+              GestureDetector(behavior: HitTestBehavior.opaque, onTapDown: (details) => _game?.handleTap(details.localPosition), child: GameWidget(game: _game!),),
 
               if (_started && !_gameOver)
                 IgnorePointer(child: _buildHud()),

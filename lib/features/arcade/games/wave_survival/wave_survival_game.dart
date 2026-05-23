@@ -9,7 +9,7 @@ enum HeroClass { warrior, archer, mage, tank, assassin, healer }
 enum EnemyClass { goblin, orc, skeleton, boss }
 enum WSGameState { setup, playing, levelComplete, gameOver }
 
-class WaveSurvivalGame extends FlameGame with TapDetector {
+class WaveSurvivalGame extends FlameGame {
   final void Function(int level, int wave, WSGameState state)? onStateUpdate;
   final void Function(int score, int levelsCompleted, bool newRecord)? onGameOver;
   int bestScore;
@@ -30,10 +30,10 @@ class WaveSurvivalGame extends FlameGame with TapDetector {
 
   @override
   Future<void> onLoad() async {
-    _showSetup();
+    showSetup();
   }
 
-  void _showSetup() {
+  void showSetup() {
     state = WSGameState.setup;
     selectedHeroes.clear();
     for (var h in heroes) { h.removeFromParent(); }
@@ -114,7 +114,7 @@ class WaveSurvivalGame extends FlameGame with TapDetector {
     currentLevel++;
     currentWave = 1;
     score += heroes.length * 500; // survival bonus
-    _showSetup();
+    showSetup();
   }
 }
 

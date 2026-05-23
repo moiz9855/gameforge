@@ -7,7 +7,7 @@ import 'package:game_forge/core/services/sound_service.dart';
 
 enum MBGameState { playing, gameOver }
 
-class MathBlasterGame extends FlameGame with TapDetector {
+class MathBlasterGame extends FlameGame {
   final void Function(int score, int lives, int level)? onStateUpdate;
   final void Function(int score, bool newRecord)? onGameOver;
   int bestScore;
@@ -98,15 +98,13 @@ class MathBlasterGame extends FlameGame with TapDetector {
     ));
   }
 
-  @override
-  void onTapDown(TapDownInfo info) {
+  void handleTap(Offset pos) {
     if (state != MBGameState.playing) return;
     
-    final pos = info.eventPosition.global;
     bool hit = false;
     
     for (final b in children.whereType<EquationBubble>().toList().reversed) {
-      if (b.toRect().contains(pos.toOffset())) {
+      if (b.toRect().contains(pos)) {
         hit = true;
         if (b.isCorrect) {
           // Popped a correct equation -> GOOD

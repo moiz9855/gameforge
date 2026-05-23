@@ -5,17 +5,17 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:game_forge/core/services/sound_service.dart';
 
-enum CRGameState { playing, gameOver }
+enum CRGameState { setup, playing, gameOver }
 
-class ColorRushGame extends FlameGame with TapDetector {
+class ColorRushGame extends FlameGame {
   final void Function(int score, int combo, int bestScore)? onStateUpdate;
   final void Function(int score, bool newRecord)? onGameOver;
+
   int bestScore;
-  
   int score = 0;
   int combo = 0;
-  CRGameState state = CRGameState.playing;
-  
+  CRGameState state = CRGameState.setup;
+
   late WheelComponent wheel;
   double spawnTimer = 0;
   double spawnInterval = 2.0;
@@ -31,26 +31,23 @@ class ColorRushGame extends FlameGame with TapDetector {
   Future<void> onLoad() async {
     wheel = WheelComponent(gameRef: this, position: Vector2(size.x / 2, size.y - 120));
     add(wheel);
-    _startGame();
   }
 
-  void _startGame() {
+  void startGame() {
+    state = CRGameState.playing;
     score = 0;
     combo = 0;
     spawnInterval = 2.0;
     spawnTimer = 0;
-    state = CRGameState.playing;
-    
-    children.whereType<FallingBall>().forEach((b) => b.removeFromParent());
+    for (var b in children.whereType<FallingBall>()) { b.removeFromParent(); }
     onStateUpdate?.call(score, combo, bestScore);
   }
-  
-  void restart() => _startGame();
 
-  @override
-  void onTapDown(TapDownInfo info) {
+  void restart() => startGame();
+
+  void handleTap(Offset pos) {
     if (state != CRGameState.playing) return;
-    final touchX = info.eventPosition.global.x;
+    final touchX = pos.dx;
     if (touchX < size.x / 2) {
       wheel.rotate(-pi / 2); // Counter-clockwise
     } else {

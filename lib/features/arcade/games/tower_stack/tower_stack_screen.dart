@@ -97,7 +97,7 @@ class _TowerStackScreenState extends State<TowerStackScreen> {
         child: CrtOverlay(
           child: Stack(
             children: [
-              GameWidget(game: _game!),
+              GestureDetector(behavior: HitTestBehavior.opaque, onTapDown: (_) => _game?.handleTap(), child: GameWidget(game: _game!),),
 
               if (_started && !_gameOver)
                 IgnorePointer(child: _buildHud()),
