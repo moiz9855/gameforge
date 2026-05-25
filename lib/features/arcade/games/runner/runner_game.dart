@@ -185,7 +185,7 @@ class RunnerGame extends FlameGame {
     final pw = player.width - 14;
     final ph = player.currentHeight - 8;
 
-    bool _aabb(double x2, double y2, double w2, double h2) {
+    bool aabb(double x2, double y2, double w2, double h2) {
       return (px - pw / 2) < (x2 + w2 / 2) &&
              (px + pw / 2) > (x2 - w2 / 2) &&
              (py - ph / 2) < (y2 + h2 / 2) &&
@@ -194,7 +194,7 @@ class RunnerGame extends FlameGame {
 
     for (final obs in children.whereType<Obstacle>()) {
       if (!obs.isActive) continue;
-      if (!_aabb(obs.x, obs.y, obs.width, obs.height)) continue;
+      if (!aabb(obs.x, obs.y, obs.width, obs.height)) continue;
 
       if (obs.type == ObstacleType.low &&
           player.state == PlayerState.jumping) {
@@ -218,7 +218,7 @@ class RunnerGame extends FlameGame {
 
     for (final c in children.whereType<GameCoin>()) {
       if (!c.isActive) continue;
-      if (_aabb(c.x, c.y, 26, 26)) {
+      if (aabb(c.x, c.y, 26, 26)) {
         coinsCollected++;
         c.isActive = false;
         SoundService.instance.play(SoundType.coin);
@@ -227,7 +227,7 @@ class RunnerGame extends FlameGame {
 
     for (final p in children.whereType<GamePowerUp>()) {
       if (!p.isActive) continue;
-      if (_aabb(p.x, p.y, 30, 30)) {
+      if (aabb(p.x, p.y, 30, 30)) {
         _activate(p.type);
         p.isActive = false;
         SoundService.instance.play(SoundType.powerupCollect);

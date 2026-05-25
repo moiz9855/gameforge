@@ -190,7 +190,7 @@ class _AchievementToastState extends State<AchievementToast> with SingleTickerPr
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFF05A28).withOpacity(0.3),
+                      color: const Color(0xFFF05A28).withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),

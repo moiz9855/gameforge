@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/secrets.dart';
 import '../domain/game_object.dart';
 import '../../auth/data/auth_repository.dart';
 
@@ -294,8 +295,8 @@ class BuilderController extends StateNotifier<BuilderState> {
     'Polishing the level...',
   ];
 
-  Future<bool> generateWithAI(String prompt, [String? _unusedApiKey]) async {
-    const geminiKey = 'AIzaSyApxInFZQPGPK2H0iAMlgt8AzYRMSELX-0';
+  Future<bool> generateWithAI(String prompt) async {
+    const geminiKey = Secrets.geminiApiKey;
     if (prompt.trim().isEmpty) return false;
 
     state = state.copyWith(

@@ -24,6 +24,7 @@ class _ArcheryScreenState extends State<ArcheryScreen> {
   int _score = 0;
   int _arrows = 3;
   int _level = 1;
+  double _wind = 0.0;
 
   int _finalScore = 0;
   bool _isNewRecord = false;
@@ -41,12 +42,13 @@ class _ArcheryScreenState extends State<ArcheryScreen> {
 
     final game = ArcheryGame(
       bestScore: hs,
-      onScoreUpdate: (score, arrows, level) {
+      onScoreUpdate: (score, arrows, level, wind) {
         if (mounted) {
           setState(() {
             _score = score;
             _arrows = arrows;
             _level = level;
+            _wind = wind;
           });
         }
       },
@@ -86,6 +88,7 @@ class _ArcheryScreenState extends State<ArcheryScreen> {
       _score = 0;
       _arrows = 3;
       _level = 1;
+      _wind = 0.0;
     });
   }
 
@@ -137,56 +140,88 @@ class _ArcheryScreenState extends State<ArcheryScreen> {
   Widget _buildHud() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 32),
-                Text('SCORE',
-                    style: GoogleFonts.pressStart2p(
-                        fontSize: 6, color: AppColors.textSecondary)),
-                const SizedBox(height: 2),
-                Text('$_score',
-                    style: GoogleFonts.pressStart2p(
-                        fontSize: 14, color: Colors.white)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                Text('LEVEL',
-                    style: GoogleFonts.pressStart2p(
-                        fontSize: 6, color: AppColors.textSecondary)),
-                const SizedBox(height: 2),
-                Text('$_level',
-                    style: GoogleFonts.pressStart2p(
-                        fontSize: 12, color: const Color(0xFFF05A28))),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const SizedBox(height: 32),
-                Row(
+          // Wind indicator
+          if (_wind.abs() > 1)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D1117),
+                  border: Border.all(color: const Color(0xFF26262E)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('🏹', style: TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
-                    Text('$_arrows',
-                        style: GoogleFonts.pressStart2p(
-                            fontSize: 10,
-                            color: const Color(0xFFF05A28))),
+                    Icon(
+                      _wind > 0 ? Icons.arrow_forward : Icons.arrow_back,
+                      color: Colors.lightBlueAccent,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'WIND: ${_wind.abs() > 100 ? "STRONG" : _wind.abs() > 40 ? "MEDIUM" : "LIGHT"}',
+                      style: GoogleFonts.shareTechMono(
+                        color: Colors.lightBlueAccent,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
-              ],
+              ),
             ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('SCORE',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 6, color: AppColors.textSecondary)),
+                    const SizedBox(height: 2),
+                    Text('$_score',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 14, color: Colors.white)),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text('LEVEL',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 6, color: AppColors.textSecondary)),
+                    const SizedBox(height: 2),
+                    Text('$_level',
+                        style: GoogleFonts.pressStart2p(
+                            fontSize: 12, color: const Color(0xFFF05A28))),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🏹', style: TextStyle(fontSize: 11)),
+                        const SizedBox(width: 4),
+                        Text('$_arrows',
+                            style: GoogleFonts.pressStart2p(
+                                fontSize: 10,
+                                color: const Color(0xFFF05A28))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -301,7 +336,7 @@ class _ArcheryScreenState extends State<ArcheryScreen> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('🎯', style: const TextStyle(fontSize: 12)),
+                        const Text('🎯', style: TextStyle(fontSize: 12)),
                         const SizedBox(width: 4),
                         Text('LVL $_level',
                             style: GoogleFonts.pressStart2p(

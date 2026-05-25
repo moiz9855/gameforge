@@ -33,6 +33,9 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
   int _losses = 0;
   int _draws = 0;
 
+  Timer? _aiTimer;
+  bool _isAiThinking = false;
+
   // Warning animation controller for Hard mode
   late AnimationController _warningController;
   late Animation<double> _warningAnimation;
@@ -58,6 +61,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _aiTimer?.cancel();
     _warningController.dispose();
     super.dispose();
   }
@@ -72,6 +76,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
   }
 
   void _startNewGame(String diff) {
+    _aiTimer?.cancel();
     setState(() {
       _difficulty = diff;
       _phase = 'playing';
@@ -80,12 +85,13 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
       _gameOver = false;
       _gameResult = '';
       _winningLine.clear();
+      _isAiThinking = false;
     });
     SoundService.instance.play(SoundType.gameStart);
   }
 
   void _onCellTap(int index) {
-    if (!_playerTurn || _gameOver || _board[index].isNotEmpty) return;
+    if (!_playerTurn || _gameOver || _isAiThinking || _board[index].isNotEmpty) return;
 
     SoundService.instance.play(SoundType.buttonTap);
     HapticFeedback.lightImpact();
@@ -93,6 +99,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
     setState(() {
       _board[index] = 'X';
       _playerTurn = false;
+      _isAiThinking = true;
     });
 
     if (_checkWinState('X')) {
@@ -105,12 +112,14 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
       return;
     }
 
-    // Trigger AI move with a small delay for natural pacing
-    Timer(const Duration(milliseconds: 500), _makeAiMove);
+    // Trigger AI move with a small delay for natural pacing (500-800ms)
+    final delay = 500 + math.Random().nextInt(300);
+    _aiTimer?.cancel();
+    _aiTimer = Timer(Duration(milliseconds: delay), _makeAiMove);
   }
 
   void _makeAiMove() {
-    if (_gameOver || _playerTurn) return;
+    if (_gameOver || _playerTurn || !mounted) return;
 
     final bestIdx = _calculateAiMove();
     if (bestIdx != -1) {
@@ -132,6 +141,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
 
       setState(() {
         _playerTurn = true;
+        _isAiThinking = false;
       });
     }
   }
@@ -323,9 +333,9 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
+            const Text(
               '⭕ VS ❌',
-              style: const TextStyle(fontSize: 48),
+              style: TextStyle(fontSize: 48),
             ),
             const SizedBox(height: 16),
             Text(
@@ -355,7 +365,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
                         width: isSelected ? 2 : 1,
                       ),
                       backgroundColor: isSelected
-                          ? const Color(0xFFF05A28).withOpacity(0.1)
+                          ? const Color(0xFFF05A28).withValues(alpha: 0.1)
                           : const Color(0xFF0D1117),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -470,12 +480,12 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
                     color: const Color(0xFF0D1117),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: const Color(0xFFF05A28).withOpacity(0.5),
+                      color: const Color(0xFFF05A28).withValues(alpha: 0.5),
                       width: 2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFF05A28).withOpacity(0.15),
+                        color: const Color(0xFFF05A28).withValues(alpha: 0.15),
                         blurRadius: 16,
                       )
                     ],
@@ -498,7 +508,7 @@ class _TttScreenState extends State<TttScreen> with SingleTickerProviderStateMix
                           child: Container(
                             decoration: BoxDecoration(
                               color: isWinningCell
-                                  ? const Color(0xFFF05A28).withOpacity(0.2)
+                                  ? const Color(0xFFF05A28).withValues(alpha: 0.2)
                                   : const Color(0xFF070B11),
                               border: Border.all(
                                 color: isWinningCell

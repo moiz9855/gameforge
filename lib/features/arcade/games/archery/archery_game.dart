@@ -1,14 +1,16 @@
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:game_forge/core/services/sound_service.dart';
 
 enum GameState { ready, aiming, shooting, levelComplete, gameOver }
 
 class ArcheryGame extends FlameGame with PanDetector {
-  final void Function(int score, int arrows, int level)? onScoreUpdate;
+  final void Function(int score, int arrows, int level, double wind)? onScoreUpdate;
   final void Function(int score, int levelsCompleted, bool newRecord)? onGameOver;
   int bestScore;
   
@@ -57,7 +59,7 @@ class ArcheryGame extends FlameGame with PanDetector {
     );
     add(target!);
     
-    onScoreUpdate?.call(score, arrowsLeft, currentLevel);
+    onScoreUpdate?.call(score, arrowsLeft, currentLevel, windForce);
   }
 
   void startGame() {
@@ -67,8 +69,15 @@ class ArcheryGame extends FlameGame with PanDetector {
   }
   
   void nextLevel() {
-    currentLevel++;
-    _loadLevel();
+    if (currentLevel < 60) {
+      currentLevel++;
+      _loadLevel();
+    } else {
+      state = GameState.gameOver;
+      final isRecord = score > bestScore;
+      if (isRecord) bestScore = score;
+      onGameOver?.call(score, currentLevel, isRecord);
+    }
   }
 
   @override
@@ -105,7 +114,7 @@ class ArcheryGame extends FlameGame with PanDetector {
   void _shoot(Vector2 initialVelocity) {
     state = GameState.shooting;
     arrowsLeft--;
-    onScoreUpdate?.call(score, arrowsLeft, currentLevel);
+    onScoreUpdate?.call(score, arrowsLeft, currentLevel, windForce);
     SoundService.instance.play(SoundType.snakeMove);
     
     activeArrow = ArrowComponent(
@@ -120,7 +129,7 @@ class ArcheryGame extends FlameGame with PanDetector {
     state = GameState.levelComplete;
     score += points;
     SoundService.instance.play(SoundType.coin);
-    onScoreUpdate?.call(score, arrowsLeft, currentLevel);
+    onScoreUpdate?.call(score, arrowsLeft, currentLevel, windForce);
     
     add(ScorePopup(points: points, position: hitPos.clone()));
     
@@ -144,7 +153,6 @@ class ArcheryGame extends FlameGame with PanDetector {
   @override
   void render(Canvas canvas) {
     super.render(canvas);
-    _drawWind(canvas);
     _drawBow(canvas);
     if (state == GameState.aiming && dragStart != null && dragCurrent != null) {
       final diff = dragStart! - dragCurrent!;
@@ -154,21 +162,6 @@ class ArcheryGame extends FlameGame with PanDetector {
     }
   }
 
-  void _drawWind(Canvas canvas) {
-    if (windForce.abs() < 1) return;
-    final cx = size.x / 2;
-    final p = Paint()
-      ..color = Colors.white24
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-    
-    final endX = cx + windForce;
-    canvas.drawLine(Offset(cx, 60), Offset(endX, 60), p);
-    
-    final arrowDir = windForce > 0 ? -5 : 5;
-    canvas.drawLine(Offset(endX, 60), Offset(endX + arrowDir, 55), p);
-    canvas.drawLine(Offset(endX, 60), Offset(endX + arrowDir, 65), p);
-  }
 
   void _drawBow(Canvas canvas) {
     final p = Paint()
@@ -191,19 +184,25 @@ class ArcheryGame extends FlameGame with PanDetector {
   }
 
   void _drawTrajectory(Canvas canvas, Vector2 initVel) {
-    final p = Paint()..color = const Color(0xFFF05A28).withValues(alpha: 0.5);
+    final p = Paint()
+      ..color = const Color(0xFFF05A28).withValues(alpha: 0.8)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.fill;
     Vector2 pos = bowPos.clone();
     Vector2 vel = initVel.clone();
     
-    for (int i = 0; i < 30; i++) {
-      canvas.drawCircle(pos.toOffset(), 2, p);
-      vel.y += 400 * 0.05; // Gravity
-      vel.x += windForce * 0.05; // Wind
-      pos += vel * 0.05;
+    for (int i = 0; i < 40; i++) {
+      if (i % 2 == 0) {
+        canvas.drawCircle(pos.toOffset(), 2.5, p);
+      }
+      vel.y += 400 * 0.03; 
+      vel.x += windForce * 0.03; 
+      pos += vel * 0.03;
       if (pos.y > size.y || pos.x < 0 || pos.x > size.x) break;
     }
   }
 }
+
 
 class TargetComponent extends PositionComponent {
   final ArcheryGame gameRef;
@@ -258,6 +257,16 @@ class TargetComponent extends PositionComponent {
     if (dist <= 40) return 10;
     return 0;
   }
+
+  void shake() {
+    add(
+      SequenceEffect([
+        MoveEffect.by(Vector2(5, 0), EffectController(duration: 0.05)),
+        MoveEffect.by(Vector2(-10, 0), EffectController(duration: 0.1)),
+        MoveEffect.by(Vector2(5, 0), EffectController(duration: 0.05)),
+      ]),
+    );
+  }
 }
 
 class ArrowComponent extends PositionComponent {
@@ -294,6 +303,7 @@ class ArrowComponent extends PositionComponent {
       if (dist <= 40) {
         isLanded = true;
         final pts = target.getPoints(headPos);
+        target.shake();
         gameRef.onArrowHitTarget(pts, headPos);
       }
     }
@@ -329,11 +339,10 @@ class ScorePopup extends PositionComponent {
     final tp = TextPainter(
       text: TextSpan(
         text: '+$points',
-        style: TextStyle(
+        style: GoogleFonts.pressStart2p(
           color: const Color(0xFFFFD54F).withValues(alpha: _life.clamp(0.0, 1.0)),
-          fontSize: 24,
+          fontSize: 16,
           fontWeight: FontWeight.bold,
-          fontFamily: 'PressStart2P',
         ),
       ),
       textDirection: TextDirection.ltr,

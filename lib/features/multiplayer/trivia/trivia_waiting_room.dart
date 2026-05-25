@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,33 +7,33 @@ import 'package:game_forge/core/constants/app_colors.dart';
 import 'package:game_forge/core/widgets/gameforge_app_bar.dart';
 import 'package:game_forge/features/multiplayer/shared/friend_invite_panel.dart';
 
-/// Waits until white + black presence then navigates into [ChessScreen].
-class ChessWaitingRoom extends StatefulWidget {
+import 'trivia_questions.dart';
+
+class TriviaWaitingRoom extends StatefulWidget {
   final String roomCode;
   final bool isCreator;
+  final String category;
 
-  const ChessWaitingRoom({
+  const TriviaWaitingRoom({
     super.key,
     required this.roomCode,
     required this.isCreator,
+    this.category = 'random',
   });
 
   @override
-  State<ChessWaitingRoom> createState() => _ChessWaitingRoomState();
+  State<TriviaWaitingRoom> createState() => _TriviaWaitingRoomState();
 }
 
-class _ChessWaitingRoomState extends State<ChessWaitingRoom>
-    with SingleTickerProviderStateMixin {
+class _TriviaWaitingRoomState extends State<TriviaWaitingRoom> with SingleTickerProviderStateMixin {
   RealtimeChannel? _channel;
-
-  // Track which roles are present using a local set
   final Set<String> _presentRoles = {};
-
   bool _wentToGame = false;
   late AnimationController _pulse;
 
-  bool get _whiteHere => _presentRoles.contains('white');
-  bool get _blackHere => _presentRoles.contains('black');
+
+  bool get _hostHere => _presentRoles.contains('host');
+  bool get _guestHere => _presentRoles.contains('guest');
 
   @override
   void initState() {
@@ -43,93 +42,99 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _subscribe());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initAndSubscribe());
   }
 
-  Future<void> _subscribe() async {
-    final myRole = widget.isCreator ? 'white' : 'black';
-    final ch = Supabase.instance.client.channel('chess:${widget.roomCode}');
+  Future<void> _initAndSubscribe() async {
+    final client = Supabase.instance.client;
+    final userId = client.auth.currentUser?.id;
+
+    try {
+      if (widget.isCreator) {
+        final qList = triviaQuestionsBank
+            .where((q) => widget.category == 'random' || q.category == widget.category)
+            .toList()
+          ..shuffle();
+        final selectedQs = qList.take(10).map((q) => q.toJson()).toList();
+
+        await client.from('trivia_rooms').insert({
+          'room_code': widget.roomCode,
+          'player1_id': userId,
+          'questions': selectedQs,
+          'category': widget.category,
+          'game_status': 'waiting',
+        });
+      } else {
+        await client
+            .from('trivia_rooms')
+            .update({'player2_id': userId, 'game_status': 'playing'})
+            .eq('room_code', widget.roomCode);
+      }
+      setState(() {});
+    } catch (_) {
+      // Offline fallback: continue using realtime channel even if DB fails
+      setState(() {});
+    }
+
+    final myRole = widget.isCreator ? 'host' : 'guest';
+    final ch = client.channel('trivia:${widget.roomCode}');
     _channel = ch;
 
     ch
-        // When a new player joins
-        .onPresenceJoin((payload) {
-          if (!mounted) return;
-          _extractRolesFromPresences(payload.newPresences);
-          _checkAndStart();
-        })
-        // When a player leaves
-        .onPresenceLeave((payload) {
-          if (!mounted) return;
-          for (final p in payload.leftPresences) {
-            final role = _roleFromPresence(p);
-            if (role != null) {
-              setState(() => _presentRoles.remove(role));
+      .onPresenceJoin((payload) {
+        if (!mounted) return;
+        for (final p in payload.newPresences) {
+          final role = p.payload['role'];
+          if (role is String) setState(() => _presentRoles.add(role));
+        }
+        _checkAndStart();
+      })
+      .onPresenceLeave((payload) {
+        if (!mounted) return;
+        for (final p in payload.leftPresences) {
+          final role = p.payload['role'];
+          if (role is String) setState(() => _presentRoles.remove(role));
+        }
+      })
+      .onPresenceSync((_) {
+        if (!mounted) return;
+        final state = _channel?.presenceState();
+        if (state != null) {
+          final roles = <String>{};
+          for (final singleState in state) {
+            for (final p in singleState.presences) {
+              final role = p.payload['role'];
+              if (role is String) roles.add(role);
             }
           }
-        })
-        // Full sync (initial state when we first connect)
-        .onPresenceSync((_) {
-          if (!mounted) return;
-          _syncFromPresenceState();
-          _checkAndStart();
-        })
-        .subscribe((status, [err]) async {
-          if (status == RealtimeSubscribeStatus.subscribed) {
-            // Track our own presence
-            await ch.track({'role': myRole});
-          }
-        });
-  }
-
-  /// Extract roles from a list of Presence objects (from join payload)
-  void _extractRolesFromPresences(List<Presence> presences) {
-    for (final p in presences) {
-      final role = _roleFromPresence(p);
-      if (role != null) {
-        setState(() => _presentRoles.add(role));
-      }
-    }
-  }
-
-  /// Pull 'role' from a single Presence object
-  String? _roleFromPresence(Presence p) {
-    final role = p.payload['role'];
-    if (role is String && role.isNotEmpty) return role;
-    return null;
-  }
-
-  /// Called on presenceSync — rebuild the full set from scratch
-  void _syncFromPresenceState() {
-    final state = _channel?.presenceState();
-    if (state == null) return;
-    final Set<String> roles = {};
-    for (final singleState in state) {
-      for (final p in singleState.presences) {
-        final role = _roleFromPresence(p);
-        if (role != null) roles.add(role);
-      }
-    }
-    setState(() {
-      _presentRoles
-        ..clear()
-        ..addAll(roles);
-    });
+          setState(() {
+            _presentRoles
+              ..clear()
+              ..addAll(roles);
+          });
+        }
+        _checkAndStart();
+      })
+      .subscribe((status, [err]) async {
+        if (status == RealtimeSubscribeStatus.subscribed) {
+          await ch.track({'role': myRole});
+        }
+      });
   }
 
   void _checkAndStart() {
-    if (_wentToGame || !_whiteHere || !_blackHere) return;
+    if (_wentToGame || !_hostHere || !_guestHere) return;
     _wentToGame = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.go('/chess/${widget.roomCode}?creator=${widget.isCreator}');
+      context.go('/trivia/${widget.roomCode}?creator=${widget.isCreator}&category=${widget.category}');
     });
   }
 
   @override
   void dispose() {
     _pulse.dispose();
-    unawaited(_channel?.unsubscribe());
+    _channel?.unsubscribe();
     super.dispose();
   }
 
@@ -150,7 +155,7 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'WAITING ROOM',
+              'TRIVIA QUIZ BATTLE',
               textAlign: TextAlign.center,
               style: GoogleFonts.rajdhani(
                 fontWeight: FontWeight.bold,
@@ -175,9 +180,9 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
               children: [
                 Expanded(
                   child: _PlayerWaitCard(
-                    label: 'White',
-                    subtitle: 'Host',
-                    joined: _whiteHere,
+                    label: 'Host',
+                    subtitle: 'Player 1',
+                    joined: _hostHere,
                     pulse: _pulse,
                     accent: Colors.white,
                   ),
@@ -185,9 +190,9 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
                 const SizedBox(width: 14),
                 Expanded(
                   child: _PlayerWaitCard(
-                    label: 'Black',
-                    subtitle: 'Guest',
-                    joined: _blackHere,
+                    label: 'Guest',
+                    subtitle: 'Player 2',
+                    joined: _guestHere,
                     pulse: _pulse,
                     accent: AppColors.primary,
                   ),
@@ -196,7 +201,7 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
             ),
             const SizedBox(height: 24),
             Text(
-              'Match starts automatically when both players are here.',
+              'Game will start automatically when both players connect.',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 13,
@@ -205,7 +210,7 @@ class _ChessWaitingRoomState extends State<ChessWaitingRoom>
             ),
             if (widget.isCreator) ...[
               const SizedBox(height: 24),
-              FriendInvitePanel(roomCode: widget.roomCode, gameType: 'chess'),
+              FriendInvitePanel(roomCode: widget.roomCode, gameType: 'trivia'),
             ],
           ],
         ),

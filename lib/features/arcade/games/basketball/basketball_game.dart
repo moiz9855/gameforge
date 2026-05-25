@@ -273,6 +273,8 @@ class HoopComponent extends PositionComponent {
     if (isMoving && gameRef.state == BBGameState.ready) {
       _time += dt;
       x = startPos.x + sin(_time * speed * 0.05) * 60;
+      // Clamp to screen bounds
+      x = x.clamp(size.x / 2, gameRef.size.x - size.x / 2);
     }
   }
 

@@ -37,7 +37,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
 
   // New games high scores
   int _archeryHighScore = 0;
-  int _waveHighScore = 0;
   int _iqHighScore = 0;
   int _memoryHighScore = 0;
   int _basketballHighScore = 0;
@@ -45,7 +44,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
   int _wordHighScore = 0;
   int _colorHighScore = 0;
   int _towerHighScore = 0;
-  int _mathHighScore = 0;
 
   @override
   void initState() {
@@ -76,7 +74,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
     final towStats = await service.getTowStats();
     final runnerHs = await service.getHighScore('runner');
     final archeryHs = await service.getHighScore('archery');
-    final waveHs = await service.getHighScore('wave_survival');
     final iqHs = await service.getHighScore('iq_puzzle');
     final memoryHs = await service.getHighScore('memory_match');
     final basketballHs = await service.getHighScore('basketball');
@@ -84,7 +81,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
     final wordHs = await service.getHighScore('word_scramble');
     final colorHs = await service.getHighScore('color_rush');
     final towerHs = await service.getHighScore('tower_stack');
-    final mathHs = await service.getHighScore('math_blaster');
 
     if (mounted) {
       setState(() {
@@ -101,7 +97,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
         _towBestTime = towStats['best_time'] as double? ?? 999.9;
         _runnerHighScore = runnerHs;
         _archeryHighScore = archeryHs;
-        _waveHighScore = waveHs;
         _iqHighScore = iqHs;
         _memoryHighScore = memoryHs;
         _basketballHighScore = basketballHs;
@@ -109,7 +104,6 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
         _wordHighScore = wordHs;
         _colorHighScore = colorHs;
         _towerHighScore = towerHs;
-        _mathHighScore = mathHs;
       });
     }
   }
@@ -396,13 +390,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
           isAvailable: true,
           onTap: () => context.push('/arcade/archery').then((_) => _loadData()),
         ).animate(delay: 400.ms).fade(duration: 250.ms).slideY(begin: 0.15),
-        _ArcadeCard(
-          title: 'Survival',
-          emoji: '🌊',
-          subtitle: 'Best: $_waveHighScore',
-          isAvailable: true,
-          onTap: () => context.push('/arcade/wave_survival').then((_) => _loadData()),
-        ).animate(delay: 450.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+
         _ArcadeCard(
           title: 'River Cross',
           emoji: '🧠',
@@ -452,13 +440,7 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
           isAvailable: true,
           onTap: () => context.push('/arcade/tower_stack').then((_) => _loadData()),
         ).animate(delay: 800.ms).fade(duration: 250.ms).slideY(begin: 0.15),
-        _ArcadeCard(
-          title: 'Math Blaster',
-          emoji: '➕',
-          subtitle: 'Best: $_mathHighScore',
-          isAvailable: true,
-          onTap: () => context.push('/arcade/math_blaster').then((_) => _loadData()),
-        ).animate(delay: 850.ms).fade(duration: 250.ms).slideY(begin: 0.15),
+
       ],
     );
   }
@@ -510,14 +492,14 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: a.isUnlocked
-                      ? const Color(0xFFF05A28).withOpacity(0.55)
+                      ? const Color(0xFFF05A28).withValues(alpha: 0.55)
                       : AppColors.border,
                   width: a.isUnlocked ? 1.5 : 1.0,
                 ),
                 boxShadow: a.isUnlocked
                     ? [
                         BoxShadow(
-                          color: const Color(0xFFF05A28).withOpacity(0.08),
+                          color: const Color(0xFFF05A28).withValues(alpha: 0.08),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         )
@@ -533,8 +515,8 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: a.isUnlocked
-                          ? const Color(0xFFF05A28).withOpacity(0.15)
-                          : Colors.grey.withOpacity(0.1),
+                          ? const Color(0xFFF05A28).withValues(alpha: 0.15)
+                          : Colors.grey.withValues(alpha: 0.1),
                     ),
                     child: Center(
                       child: Text(
@@ -563,8 +545,8 @@ class _ArcadeScreenState extends State<ArcadeScreen> {
                           a.description,
                           style: GoogleFonts.rajdhani(
                             color: a.isUnlocked
-                                ? Colors.white.withOpacity(0.8)
-                                : Colors.grey.withOpacity(0.6),
+                                ? Colors.white.withValues(alpha: 0.8)
+                                : Colors.grey.withValues(alpha: 0.6),
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -609,12 +591,12 @@ class _ArcadeCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           color: const Color(0xFF0D1117),
           border: Border.all(
-            color: const Color(0xFFF05A28).withOpacity(0.4),
+            color: const Color(0xFFF05A28).withValues(alpha: 0.4),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFF05A28).withOpacity(0.08),
+              color: const Color(0xFFF05A28).withValues(alpha: 0.08),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -654,7 +636,7 @@ class _ArcadeCard extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF05A28).withOpacity(0.12),
+                  color: const Color(0xFFF05A28).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
@@ -673,3 +655,4 @@ class _ArcadeCard extends StatelessWidget {
     );
   }
 }
+

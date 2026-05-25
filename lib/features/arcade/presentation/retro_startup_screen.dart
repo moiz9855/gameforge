@@ -132,7 +132,7 @@ class _RetroStartupScreenState extends State<RetroStartupScreen> {
                               Text(
                                 'SYSTEM BOOTING',
                                 style: GoogleFonts.pressStart2p(
-                                  color: const Color(0xFFF05A28).withOpacity(0.7),
+                                  color: const Color(0xFFF05A28).withValues(alpha: 0.7),
                                   fontSize: 10.0,
                                 ),
                               ),
@@ -170,7 +170,7 @@ class _RetroStartupScreenState extends State<RetroStartupScreen> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFF05A28).withOpacity(0.15),
+                                  color: const Color(0xFFF05A28).withValues(alpha: 0.15),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                 ),

@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flame/components.dart';
-import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:game_forge/core/services/sound_service.dart';
@@ -102,9 +101,13 @@ class WheelComponent extends PositionComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    // Smooth rotation
+    // Smooth rotation — snap when close to prevent infinite spin
     final diff = targetAngle - angle;
-    angle += diff * 10 * dt;
+    if (diff.abs() < 0.01) {
+      angle = targetAngle;
+    } else {
+      angle += diff * 12 * dt;
+    }
   }
 
   Color getTopColor() {

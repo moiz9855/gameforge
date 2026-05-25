@@ -50,36 +50,37 @@ class MultiplayerScreen extends StatelessWidget {
             tint: AppColors.ludoTint,
             onTap: () => context.push('/ludo-lobby'),
           ),
-          const SizedBox(height: 44),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'MORE COMING SOON',
-                  style: GoogleFonts.pressStart2p(
-                    fontSize: 10,
-                    color: AppColors.muted,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Battle royale prototypes, ranked ladders, and seasonal cosmetics are melting in the forge.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: AppColors.textSecondary,
-                    height: 1.45,
-                  ),
-                ),
-              ],
-            ),
+          const SizedBox(height: 16),
+          _MultiGameRowCard(
+            title: 'UNO 🃏',
+            subtitle: 'Colors & action cards · 2-4 players',
+            icon: Icons.style_rounded,
+            tint: Colors.redAccent,
+            onTap: () => context.push('/uno-lobby'),
+          ),
+          const SizedBox(height: 16),
+          _MultiGameRowCard(
+            title: 'Draw & Guess ✏️',
+            subtitle: 'Doodle & chat guess live · 2-8 players',
+            icon: Icons.gesture_rounded,
+            tint: Colors.cyanAccent,
+            onTap: () => context.push('/draw-lobby'),
+          ),
+          const SizedBox(height: 16),
+          _MultiGameRowCard(
+            title: 'Trivia Quiz ❓',
+            subtitle: '1v1 speed battle · 10 questions',
+            icon: Icons.quiz_rounded,
+            tint: Colors.amberAccent,
+            onTap: () => context.push('/trivia-lobby'),
+          ),
+          const SizedBox(height: 16),
+          _MultiGameRowCard(
+            title: 'Meme Battle 😂',
+            subtitle: '3-8 Players · Caption battle',
+            icon: Icons.emoji_emotions_rounded,
+            tint: const Color(0xFFF05A28),
+            onTap: () => context.push('/meme-lobby'),
           ),
         ],
       ),

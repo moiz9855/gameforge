@@ -18,7 +18,7 @@ import 'package:game_forge/features/arcade/games/ttt/ttt_screen.dart';
 import 'package:game_forge/features/arcade/games/tow/tow_screen.dart';
 import 'package:game_forge/features/arcade/games/runner/runner_screen.dart';
 import 'package:game_forge/features/arcade/games/archery/archery_screen.dart';
-import 'package:game_forge/features/arcade/games/wave_survival/wave_survival_screen.dart';
+
 import 'package:game_forge/features/arcade/games/iq_puzzle/iq_puzzle_screen.dart';
 import 'package:game_forge/features/arcade/games/memory_match/memory_match_screen.dart';
 import 'package:game_forge/features/arcade/games/basketball/basketball_screen.dart';
@@ -26,7 +26,7 @@ import 'package:game_forge/features/arcade/games/slingshot/slingshot_screen.dart
 import 'package:game_forge/features/arcade/games/word_scramble/word_scramble_screen.dart';
 import 'package:game_forge/features/arcade/games/color_rush/color_rush_screen.dart';
 import 'package:game_forge/features/arcade/games/tower_stack/tower_stack_screen.dart';
-import 'package:game_forge/features/arcade/games/math_blaster/math_blaster_screen.dart';
+
 import 'package:game_forge/features/arcade/presentation/retro_startup_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_screen.dart';
 import 'package:game_forge/features/multiplayer/chess/chess_lobby.dart';
@@ -34,6 +34,19 @@ import 'package:game_forge/features/multiplayer/chess/chess_waiting_room.dart';
 import 'package:game_forge/features/multiplayer/ludo/ludo_screen.dart';
 import 'package:game_forge/features/multiplayer/ludo/ludo_lobby.dart';
 import 'package:game_forge/features/multiplayer/ludo/ludo_waiting_room.dart';
+import 'package:game_forge/features/multiplayer/uno/uno_lobby.dart';
+import 'package:game_forge/features/multiplayer/uno/uno_waiting_room.dart';
+import 'package:game_forge/features/multiplayer/uno/uno_screen.dart';
+import 'package:game_forge/features/multiplayer/draw/draw_lobby.dart';
+import 'package:game_forge/features/multiplayer/draw/draw_waiting_room.dart';
+import 'package:game_forge/features/multiplayer/draw/draw_screen.dart';
+import 'package:game_forge/features/multiplayer/trivia/trivia_lobby.dart';
+import 'package:game_forge/features/multiplayer/trivia/trivia_waiting_room.dart';
+import 'package:game_forge/features/multiplayer/trivia/trivia_screen.dart';
+
+import 'package:game_forge/features/multiplayer/meme/meme_lobby.dart';
+import 'package:game_forge/features/multiplayer/meme/meme_waiting_room.dart';
+import 'package:game_forge/features/multiplayer/meme/meme_screen.dart';
 
 /// Root navigator key (used for global dialogs such as in-app updates).
 final appNavigatorKey = GlobalKey<NavigatorState>();
@@ -84,7 +97,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/arcade/tow', builder: (c, s) => const TowScreen()),
       GoRoute(path: '/arcade/runner', builder: (c, s) => const RunnerScreen()),
       GoRoute(path: '/arcade/archery', builder: (c, s) => const ArcheryScreen()),
-      GoRoute(path: '/arcade/wave_survival', builder: (c, s) => const WaveSurvivalScreen()),
+
       GoRoute(path: '/arcade/iq_puzzle', builder: (c, s) => const IqPuzzleScreen()),
       GoRoute(path: '/arcade/memory_match', builder: (c, s) => const MemoryMatchScreen()),
       GoRoute(path: '/arcade/basketball', builder: (c, s) => const BasketballScreen()),
@@ -92,7 +105,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/arcade/word_scramble', builder: (c, s) => const WordScrambleScreen()),
       GoRoute(path: '/arcade/color_rush', builder: (c, s) => const ColorRushScreen()),
       GoRoute(path: '/arcade/tower_stack', builder: (c, s) => const TowerStackScreen()),
-      GoRoute(path: '/arcade/math_blaster', builder: (c, s) => const MathBlasterScreen()),
+
       GoRoute(path: '/chess-lobby', builder: (c, s) => const ChessLobby()),
       GoRoute(
         path: '/chess-waiting/:roomCode',
@@ -142,6 +155,88 @@ final routerProvider = Provider<GoRouter>((ref) {
             isCreator: isCreator,
             numPlayers: numPlayers,
             myPlayerIdx: myIdx,
+          );
+        },
+      ),
+      GoRoute(path: '/uno-lobby', builder: (c, s) => const UnoLobby()),
+      GoRoute(
+        path: '/uno-waiting/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final creator = s.uri.queryParameters['creator'] == 'true';
+          final numPlayers = int.tryParse(s.uri.queryParameters['players'] ?? '2') ?? 2;
+          return UnoWaitingRoom(roomCode: roomCode, isCreator: creator, numPlayers: numPlayers);
+        },
+      ),
+      GoRoute(
+        path: '/uno/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final isCreator = s.uri.queryParameters['creator'] == 'true';
+          final numPlayers = int.tryParse(s.uri.queryParameters['players'] ?? '2') ?? 2;
+          return UnoScreen(roomCode: roomCode, isCreator: isCreator, numPlayers: numPlayers);
+        },
+      ),
+      GoRoute(path: '/draw-lobby', builder: (c, s) => const DrawLobby()),
+      GoRoute(
+        path: '/draw-waiting/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final creator = s.uri.queryParameters['creator'] == 'true';
+          final maxPlayers = int.tryParse(s.uri.queryParameters['players'] ?? '4') ?? 4;
+          return DrawWaitingRoom(roomCode: roomCode, isCreator: creator, maxPlayers: maxPlayers);
+        },
+      ),
+      GoRoute(
+        path: '/draw/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final isCreator = s.uri.queryParameters['creator'] == 'true';
+          final maxPlayers = int.tryParse(s.uri.queryParameters['players'] ?? '4') ?? 4;
+          return DrawScreen(roomCode: roomCode, isCreator: isCreator, maxPlayers: maxPlayers);
+        },
+      ),
+      GoRoute(path: '/trivia-lobby', builder: (c, s) => const TriviaLobby()),
+      GoRoute(
+        path: '/trivia-waiting/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final creator = s.uri.queryParameters['creator'] == 'true';
+          final category = s.uri.queryParameters['category'] ?? 'random';
+          return TriviaWaitingRoom(roomCode: roomCode, isCreator: creator, category: category);
+        },
+      ),
+      GoRoute(
+        path: '/trivia/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final isCreator = s.uri.queryParameters['creator'] == 'true';
+          final category = s.uri.queryParameters['category'] ?? 'random';
+          return TriviaScreen(roomCode: roomCode, isCreator: isCreator, category: category);
+        },
+      ),
+      GoRoute(path: '/meme-lobby', builder: (c, s) => const MemeLobby()),
+      GoRoute(
+        path: '/meme-waiting/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final creator = s.uri.queryParameters['creator'] == 'true';
+          final maxP = int.tryParse(s.uri.queryParameters['players'] ?? '8') ?? 8;
+          return MemeWaitingRoom(
+            roomCode: roomCode,
+            isCreator: creator,
+            maxPlayers: maxP,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/meme/:roomCode',
+        builder: (c, s) {
+          final roomCode = s.pathParameters['roomCode']!;
+          final isCreator = s.uri.queryParameters['creator'] == 'true';
+          return MemeScreen(
+            roomCode: roomCode,
+            isCreator: isCreator,
           );
         },
       ),

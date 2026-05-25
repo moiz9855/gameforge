@@ -1007,9 +1007,9 @@ class _TugFieldPainter extends CustomPainter {
     aiLabelPainter.paint(canvas, Offset(aiX - 5, midY - 40));
 
     // Position indicator bar at top
-    final barY = 20.0;
+    const barY = 20.0;
     final barWidth = size.width - 60;
-    final barLeft = 30.0;
+    const barLeft = 30.0;
     
     // Bar background
     final barBgPaint = Paint()

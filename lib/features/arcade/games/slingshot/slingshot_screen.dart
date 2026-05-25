@@ -121,46 +121,74 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
   }
 
   Widget _buildHud() {
+    String typeText = 'NORMAL';
+    switch (_game?.currentBallType ?? BallType.normal) {
+      case BallType.normal: typeText = '🔴 NORMAL'; break;
+      case BallType.heavy: typeText = '⚫ HEAVY'; break;
+      case BallType.split: typeText = '🔵 SPLIT'; break;
+      case BallType.bomb: typeText = '💣 BOMB'; break;
+      case BallType.bounce: typeText = '🟡 BOUNCE'; break;
+    }
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 32),
-                Text('SCORE', style: GoogleFonts.pressStart2p(fontSize: 6, color: AppColors.textSecondary)),
-                const SizedBox(height: 2),
-                Text('$_score', style: GoogleFonts.pressStart2p(fontSize: 14, color: Colors.white)),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                const SizedBox(height: 32),
-                Text('LEVEL', style: GoogleFonts.pressStart2p(fontSize: 6, color: AppColors.textSecondary)),
-                const SizedBox(height: 2),
-                Text('$_level', style: GoogleFonts.pressStart2p(fontSize: 12, color: const Color(0xFFF05A28))),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                const SizedBox(height: 32),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('🔴', style: TextStyle(fontSize: 11)),
-                    const SizedBox(width: 4),
-                    Text('$_balls', style: GoogleFonts.pressStart2p(fontSize: 10, color: const Color(0xFFF05A28))),
+                    const SizedBox(height: 32),
+                    Text('SCORE', style: GoogleFonts.pressStart2p(fontSize: 6, color: AppColors.textSecondary)),
+                    const SizedBox(height: 2),
+                    Text('$_score', style: GoogleFonts.pressStart2p(fontSize: 14, color: Colors.white)),
                   ],
                 ),
-              ],
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    const SizedBox(height: 32),
+                    Text('LEVEL', style: GoogleFonts.pressStart2p(fontSize: 6, color: AppColors.textSecondary)),
+                    const SizedBox(height: 2),
+                    Text('$_level/75', style: GoogleFonts.pressStart2p(fontSize: 12, color: const Color(0xFFF05A28))),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    const SizedBox(height: 32),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🔴', style: TextStyle(fontSize: 11)),
+                        const SizedBox(width: 4),
+                        Text('$_balls', style: GoogleFonts.pressStart2p(fontSize: 10, color: const Color(0xFFF05A28))),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black38,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: Colors.white10),
+            ),
+            child: Text(
+              typeText,
+              style: GoogleFonts.pressStart2p(fontSize: 7, color: Colors.white70),
             ),
           ),
         ],
@@ -184,6 +212,9 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
               Text('PULL TO SHOOT', style: GoogleFonts.shareTechMono(fontSize: 14, color: AppColors.textSecondary, letterSpacing: 3)),
               const SizedBox(height: 28),
               
+              Text('TAP IN MID-AIR FOR SPLIT ABILITY!\nCYCLE 5 UNIQUE POWER BALLS ACROSS 75 LEVELS!', textAlign: TextAlign.center, style: GoogleFonts.pressStart2p(fontSize: 7, color: Colors.white60, height: 1.8)),
+              
+              const SizedBox(height: 28),
               if (_bestScore > 0) ...[
                 Text('BEST SCORE: $_bestScore', style: GoogleFonts.pressStart2p(fontSize: 9, color: AppColors.textSecondary)),
                 const SizedBox(height: 16),
@@ -195,7 +226,7 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
                 child: ElevatedButton(
                   onPressed: _startGame,
                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF05A28)),
-                  child: Text('START GAME', style: GoogleFonts.pressStart2p(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: Text('START BLAST', style: GoogleFonts.pressStart2p(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],
@@ -206,16 +237,88 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
   }
 
   Widget _buildCompleteOverlay() {
+    final stars = (_balls + 1).clamp(1, 3);
     return Container(
-      color: Colors.black.withValues(alpha: 0.8),
+      color: Colors.black.withValues(alpha: 0.85),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('LEVEL CLEARED', style: GoogleFonts.pressStart2p(fontSize: 20, color: Colors.green)),
-            const SizedBox(height: 20),
-            Text('SCORE: $_score', style: GoogleFonts.pressStart2p(fontSize: 14, color: Colors.white)),
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'LEVEL $_level CLEARED! 🎉',
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: const Color(0xFFF05A28),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              
+              // Stars display
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (index) {
+                  final filled = index < stars;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      filled ? '⭐' : '☆',
+                      style: TextStyle(
+                        fontSize: 48,
+                        color: filled ? AppColors.gold : Colors.white24,
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 20),
+
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0D1117),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFF05A28).withValues(alpha: 0.4)),
+                ),
+                child: Column(
+                  children: [
+                    Text('SCORE', style: GoogleFonts.shareTechMono(fontSize: 12, color: AppColors.textSecondary, letterSpacing: 2)),
+                    const SizedBox(height: 4),
+                    Text('$_score', style: GoogleFonts.pressStart2p(fontSize: 24, color: Colors.white)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 28),
+
+              SizedBox(
+                width: 220,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: () {
+                    SoundService.instance.play(SoundType.gameStart);
+                    _game?.nextLevel();
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF05A28)),
+                  child: Text('NEXT LEVEL', style: GoogleFonts.pressStart2p(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: 220,
+                height: 48,
+                child: OutlinedButton(
+                  onPressed: () {
+                    SoundService.instance.play(SoundType.buttonBack);
+                    Navigator.pop(context);
+                  },
+                  style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.border)),
+                  child: Text('BACK TO ARCADE', style: GoogleFonts.pressStart2p(fontSize: 9, color: AppColors.textSecondary)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

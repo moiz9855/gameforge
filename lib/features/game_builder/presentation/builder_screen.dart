@@ -300,7 +300,6 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen>
   void _showAIPanel() {
     SoundService.instance.play(SoundType.buttonTap);
     final aiPromptController = TextEditingController();
-    final apiKeyController = TextEditingController();
 
     showModalBottomSheet(
       context: context,
@@ -385,16 +384,7 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  // API Key field
-                  _BuilderTextField(
-                    controller: apiKeyController,
-                    label: 'Claude API Key',
-                    hint: 'sk-ant-...',
-                    icon: Icons.key,
-                    obscure: true,
-                  ),
-                  const SizedBox(height: 16),
+
                   // Prompt field
                   _BuilderTextField(
                     controller: aiPromptController,
@@ -456,11 +446,11 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen>
                       ),
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          if (apiKeyController.text.trim().isEmpty) {
+                          if (aiPromptController.text.trim().isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text(
-                                    'Please enter your Claude API key'),
+                                    'Please enter a game description'),
                                 backgroundColor: AppColors.warning,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -473,7 +463,6 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen>
                           Navigator.pop(ctx);
                           _runAIGeneration(
                             aiPromptController.text,
-                            apiKeyController.text.trim(),
                           );
                         },
                         icon: const Icon(Icons.auto_awesome, size: 18),
@@ -505,9 +494,9 @@ class _BuilderScreenState extends ConsumerState<BuilderScreen>
     );
   }
 
-  void _runAIGeneration(String prompt, String apiKey) async {
+  void _runAIGeneration(String prompt) async {
     final controller = ref.read(builderStateProvider.notifier);
-    final success = await controller.generateWithAI(prompt, apiKey);
+    final success = await controller.generateWithAI(prompt);
     if (mounted && success) {
       SoundService.instance.play(SoundType.achievement);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1390,7 +1379,6 @@ class _BuilderTextField extends StatelessWidget {
   final IconData icon;
   final int maxLines;
   final ValueChanged<String>? onChanged;
-  final bool obscure;
 
   const _BuilderTextField({
     required this.controller,
@@ -1399,7 +1387,6 @@ class _BuilderTextField extends StatelessWidget {
     required this.icon,
     this.maxLines = 1,
     this.onChanged,
-    this.obscure = false,
   });
 
   @override
@@ -1414,8 +1401,8 @@ class _BuilderTextField extends StatelessWidget {
         TextField(
           controller: controller,
           onChanged: onChanged,
-          maxLines: obscure ? 1 : maxLines,
-          obscureText: obscure,
+          maxLines: maxLines,
+          obscureText: false,
           style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
