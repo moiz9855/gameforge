@@ -135,7 +135,7 @@ class _MemeWaitingRoomState extends State<MemeWaitingRoom> with SingleTickerProv
   }
 
   void _startGame() {
-    if (_joinedPlayers.length < 3) return;
+    if (_joinedPlayers.length < 2) return;
     _channel?.sendBroadcastMessage(
       event: 'start_game',
       payload: {},
@@ -167,7 +167,7 @@ class _MemeWaitingRoomState extends State<MemeWaitingRoom> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final canStart = _joinedPlayers.length >= 3;
+    final canStart = _joinedPlayers.length >= 2;
     final isHost = _amIHost();
 
     return Scaffold(
@@ -274,7 +274,7 @@ class _MemeWaitingRoomState extends State<MemeWaitingRoom> with SingleTickerProv
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: Text(
-                  canStart ? 'START GAME' : 'WAITING FOR 3+ PLAYERS',
+                  canStart ? 'START GAME' : 'WAITING FOR 2+ PLAYERS',
                   style: GoogleFonts.rajdhani(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

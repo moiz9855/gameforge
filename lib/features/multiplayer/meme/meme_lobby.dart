@@ -113,7 +113,7 @@ class _MemeLobbyState extends ConsumerState<MemeLobby> {
                           value: _selectedPlayers,
                           dropdownColor: AppColors.card,
                           style: const TextStyle(color: Colors.white, fontSize: 18),
-                          items: [3,4,5,6,7,8].map((e) => DropdownMenuItem(value: e, child: Text('$e'))).toList(),
+                          items: [2,3,4,5,6,7,8].map((e) => DropdownMenuItem(value: e, child: Text('$e'))).toList(),
                           onChanged: (v) => setState(() => _selectedPlayers = v ?? 4),
                         ),
                       ],

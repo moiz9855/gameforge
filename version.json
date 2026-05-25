@@ -1,7 +1,7 @@
 {
-  "version": "1.6",
+  "version": "1.6.1",
   "min_version": "1.0.0",
-  "download_url": "https://github.com/moiz9855/gameforge/releases/download/v1.6/app-release.apk",
-  "changelog": "Added Meme Battle multiplayer game! Vote for the funniest captions with friends.",
+  "download_url": "https://github.com/moiz9855/gameforge/releases/download/v1.6.1/app-release.apk",
+  "changelog": "Meme Battle now supports minimum 2 players! Added Meme Battle multiplayer game! Vote for the funniest captions with friends.",
   "force_update": false
 }
