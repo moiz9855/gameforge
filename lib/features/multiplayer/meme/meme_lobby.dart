@@ -9,7 +9,8 @@ import 'package:game_forge/features/auth/presentation/auth_controller.dart';
 import 'dart:math';
 
 class MemeLobby extends ConsumerStatefulWidget {
-  const MemeLobby({super.key});
+  final String? roomCode;
+  const MemeLobby({super.key, this.roomCode});
 
   @override
   ConsumerState<MemeLobby> createState() => _MemeLobbyState();
@@ -19,6 +20,14 @@ class _MemeLobbyState extends ConsumerState<MemeLobby> {
   final TextEditingController _codeController = TextEditingController();
   int _selectedPlayers = 4;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _codeController.text = widget.roomCode!.toUpperCase();
+    }
+  }
   final _supabase = Supabase.instance.client;
 
   String _generateRoomCode() {

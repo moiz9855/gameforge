@@ -7,11 +7,13 @@ import 'package:game_forge/core/constants/app_colors.dart';
 class RoomCodeBoxes extends StatefulWidget {
   final ValueChanged<String> onChanged;
   final bool autofocus;
+  final String? initialCode;
 
   const RoomCodeBoxes({
     super.key,
     required this.onChanged,
     this.autofocus = true,
+    this.initialCode,
   });
 
   @override
@@ -26,11 +28,28 @@ class _RoomCodeBoxesState extends State<RoomCodeBoxes> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialCode != null) {
+      final code = widget.initialCode!.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+      final chars = code.split('');
+      for (var i = 0; i < 6; i++) {
+        _controllers[i].text = i < chars.length ? chars[i] : '';
+      }
+    }
     for (final c in _controllers) {
       c.addListener(_syncCode);
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.autofocus) _focusNodes[0].requestFocus();
+      if (widget.autofocus) {
+        // Request focus on the next empty field
+        int firstEmpty = 0;
+        for (int i = 0; i < 6; i++) {
+          if (_controllers[i].text.isEmpty) {
+            firstEmpty = i;
+            break;
+          }
+        }
+        _focusNodes[firstEmpty].requestFocus();
+      }
     });
   }
 

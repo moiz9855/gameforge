@@ -8,7 +8,8 @@ import 'package:game_forge/core/widgets/room_code_boxes.dart';
 
 /// Cyber Ludo lobby — orange/fire accents, 6-slot join code, seat picker.
 class LudoLobby extends StatefulWidget {
-  const LudoLobby({super.key});
+  final String? roomCode;
+  const LudoLobby({super.key, this.roomCode});
 
   @override
   State<LudoLobby> createState() => _LudoLobbyState();
@@ -17,6 +18,14 @@ class LudoLobby extends StatefulWidget {
 class _LudoLobbyState extends State<LudoLobby> {
   int _numPlayers = 2;
   String _joinCode = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _joinCode = widget.roomCode!;
+    }
+  }
 
   static const _dots = [
     Color(0xFFE53935),
@@ -206,6 +215,7 @@ class _LudoLobbyState extends State<LudoLobby> {
             ),
             const SizedBox(height: 14),
             RoomCodeBoxes(
+              initialCode: widget.roomCode,
               onChanged: (code) => setState(() => _joinCode = code),
             ),
             const SizedBox(height: 18),

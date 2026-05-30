@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepository(Supabase.instance.client);
@@ -7,6 +8,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 class AuthRepository {
   final SupabaseClient _supabase;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   AuthRepository(this._supabase);
 
@@ -24,22 +26,21 @@ class AuthRepository {
       password: password,
       data: {'username': username},
     );
-    
-    // If we need to insert the user into our public.users table,
-    // Supabase usually handles this via a Postgres Trigger on auth.users insert.
-    // Assuming a trigger exists, we just need to sign up.
-    // If not, we would insert here:
-    /*
-    if (response.user != null) {
-      await _supabase.from('users').insert({
-        'id': response.user!.id,
-        'username': username,
-      });
-    }
-    */
+  }
+
+  Future<void> signInWithGoogle() async {
+    final googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) return;
+    final googleAuth = await googleUser.authentication;
+    await _supabase.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: googleAuth.idToken!,
+      accessToken: googleAuth.accessToken,
+    );
   }
 
   Future<void> signOut() async {
+    await _googleSignIn.signOut();
     await _supabase.auth.signOut();
   }
 }

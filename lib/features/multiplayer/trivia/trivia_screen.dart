@@ -60,7 +60,10 @@ class _TriviaScreenState extends State<TriviaScreen> {
     try {
       final res = await client.from('trivia_rooms').select('questions').eq('room_code', widget.roomCode).single();
       final qJson = res['questions'] as List;
-      _questions = qJson.map((q) => TriviaQuestion.fromJson(q as Map<String, dynamic>)).toList();
+      _questions = qJson.map((q) {
+        final qMap = Map<String, dynamic>.from(q as Map);
+        return TriviaQuestion.fromJson(qMap);
+      }).toList();
     } catch (_) {
       // Fallback offline list
       final qList = triviaQuestionsBank
@@ -641,28 +644,20 @@ class _TriviaScreenState extends State<TriviaScreen> {
               const Text('🏆', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
               Text(
-                'OPPONENT LEFT!',
+                'Opponent left! You Win! 🏆',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.pressStart2p(
-                  fontSize: 10,
+                  fontSize: 12,
                   color: AppColors.success,
                   fontWeight: FontWeight.bold,
+                  height: 1.5,
                 ),
               ),
-              const SizedBox(height: 14),
-              Text(
-                'Opponent left the match. You Win by default!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.rajdhani(
-                  fontSize: 16,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => context.go('/'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
-                child: Text('BACK TO MENU', style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white)),
+                child: Text('EXIT TO LOBBY', style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white)),
               ),
             ],
           ),

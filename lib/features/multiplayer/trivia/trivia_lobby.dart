@@ -8,7 +8,8 @@ import 'package:game_forge/core/widgets/room_code_boxes.dart';
 import 'package:game_forge/core/services/sound_service.dart';
 
 class TriviaLobby extends StatefulWidget {
-  const TriviaLobby({super.key});
+  final String? roomCode;
+  const TriviaLobby({super.key, this.roomCode});
 
   @override
   State<TriviaLobby> createState() => _TriviaLobbyState();
@@ -17,6 +18,14 @@ class TriviaLobby extends StatefulWidget {
 class _TriviaLobbyState extends State<TriviaLobby> {
   String _joinCode = '';
   String _selectedCategory = 'random';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _joinCode = widget.roomCode!;
+    }
+  }
 
   final List<Map<String, String>> _categories = [
     {'id': 'random', 'name': '🎲 Random Mix'},
@@ -190,6 +199,7 @@ class _TriviaLobbyState extends State<TriviaLobby> {
             ),
             const SizedBox(height: 14),
             RoomCodeBoxes(
+              initialCode: widget.roomCode,
               onChanged: (code) => setState(() => _joinCode = code),
             ),
             const SizedBox(height: 20),

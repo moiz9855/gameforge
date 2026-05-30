@@ -208,8 +208,34 @@ class _InviteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconData = gameType == 'chess' ? Icons.grid_4x4 : Icons.casino;
-    final label = gameType == 'chess' ? 'Chess Match' : 'Ludo Game';
+    IconData iconData = Icons.games;
+    String label = 'Game';
+    switch (gameType) {
+      case 'chess':
+        iconData = Icons.grid_4x4;
+        label = 'Chess Match';
+        break;
+      case 'ludo':
+        iconData = Icons.casino;
+        label = 'Ludo Game';
+        break;
+      case 'uno':
+        iconData = Icons.style;
+        label = 'UNO Game';
+        break;
+      case 'draw':
+        iconData = Icons.brush;
+        label = 'Draw & Guess';
+        break;
+      case 'trivia':
+        iconData = Icons.quiz;
+        label = 'Trivia Quiz';
+        break;
+      case 'meme':
+        iconData = Icons.sentiment_very_satisfied;
+        label = 'Meme Battle';
+        break;
+    }
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -299,15 +325,7 @@ class _InviteDialog extends StatelessWidget {
                       ),
                       onPressed: () {
                         Navigator.of(context).pop();
-                        if (gameType == 'chess') {
-                          context.push(
-                              '/chess-waiting/$roomCode?creator=false');
-                        } else {
-                          final p = (data['players'] as num?)?.toInt() ?? 2;
-                          final my = (data['my_idx'] as num?)?.toInt() ?? 1;
-                          context.push(
-                              '/ludo-waiting/$roomCode?creator=false&players=$p&myIdx=$my');
-                        }
+                        context.push('/$gameType-lobby?roomCode=$roomCode');
                       },
                       child: Text(
                         'ACCEPT',

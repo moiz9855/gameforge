@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:game_forge/features/auth/presentation/auth_screen.dart';
+import 'package:game_forge/features/auth/presentation/onboarding_screen.dart';
 import 'package:game_forge/features/shell/main_shell.dart';
 import 'package:game_forge/features/auth/presentation/auth_controller.dart';
 import 'package:game_forge/features/game_builder/presentation/builder_screen.dart';
@@ -48,6 +51,35 @@ import 'package:game_forge/features/multiplayer/meme/meme_lobby.dart';
 import 'package:game_forge/features/multiplayer/meme/meme_waiting_room.dart';
 import 'package:game_forge/features/multiplayer/meme/meme_screen.dart';
 
+final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
+  final authState = ref.watch(authStateProvider).valueOrNull;
+  final user = authState?.session?.user;
+  if (user == null) return false;
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final localVal = prefs.getBool('onboarding_completed_${user.id}');
+    if (localVal == true) return true;
+
+    final response = await Supabase.instance.client
+        .from('users')
+        .select('onboarding_completed')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (response != null) {
+      final completed = response['onboarding_completed'] as bool? ?? false;
+      if (completed) {
+        await prefs.setBool('onboarding_completed_${user.id}', true);
+        return true;
+      }
+    }
+  } catch (e) {
+    debugPrint('Onboarding check error: $e');
+  }
+  return false;
+});
+
 /// Root navigator key (used for global dialogs such as in-app updates).
 final appNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -61,12 +93,43 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (authState.isLoading) return null;
       final isAuthenticated = authState.value?.session != null;
       final isAuthRoute = state.matchedLocation == '/auth';
+      
       if (!isAuthenticated && !isAuthRoute) return '/auth';
       if (isAuthenticated && isAuthRoute) return '/';
+
+      if (isAuthenticated) {
+        final onboardingAsync = ref.watch(onboardingCompletedProvider);
+        if (onboardingAsync.isLoading) return null;
+
+        final isCompleted = onboardingAsync.value ?? false;
+        final isOnboardingRoute = state.matchedLocation == '/onboarding';
+
+        if (!isCompleted) {
+          return '/onboarding';
+        }
+        if (isCompleted && isOnboardingRoute) {
+          return '/';
+        }
+      }
+
+      final gameType = state.uri.queryParameters['game_type'];
+      if (gameType != null) {
+        final roomCode = state.uri.queryParameters['room_code'] ?? state.uri.queryParameters['roomCode'] ?? '';
+        switch (gameType) {
+          case 'chess': return '/chess-lobby?roomCode=$roomCode';
+          case 'ludo': return '/ludo-lobby?roomCode=$roomCode';
+          case 'uno': return '/uno-lobby?roomCode=$roomCode';
+          case 'draw': return '/draw-lobby?roomCode=$roomCode';
+          case 'trivia': return '/trivia-lobby?roomCode=$roomCode';
+          case 'meme': return '/meme-lobby?roomCode=$roomCode';
+        }
+      }
+
       return null;
     },
     routes: [
       GoRoute(path: '/auth', builder: (c, s) => const AuthScreen()),
+      GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (c, s) => const MainShell()),
       GoRoute(path: '/builder', builder: (c, s) => const BuilderScreen()),
       GoRoute(
@@ -106,7 +169,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/arcade/color_rush', builder: (c, s) => const ColorRushScreen()),
       GoRoute(path: '/arcade/tower_stack', builder: (c, s) => const TowerStackScreen()),
 
-      GoRoute(path: '/chess-lobby', builder: (c, s) => const ChessLobby()),
+      GoRoute(
+        path: '/chess-lobby',
+        builder: (c, s) => ChessLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/chess-waiting/:roomCode',
         builder: (c, s) {
@@ -123,7 +189,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return ChessScreen(roomCode: roomCode, isCreator: isCreator);
         },
       ),
-      GoRoute(path: '/ludo-lobby', builder: (c, s) => const LudoLobby()),
+      GoRoute(
+        path: '/ludo-lobby',
+        builder: (c, s) => LudoLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/ludo-waiting/:roomCode',
         builder: (c, s) {
@@ -158,7 +227,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(path: '/uno-lobby', builder: (c, s) => const UnoLobby()),
+      GoRoute(
+        path: '/uno-lobby',
+        builder: (c, s) => UnoLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/uno-waiting/:roomCode',
         builder: (c, s) {
@@ -177,7 +249,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return UnoScreen(roomCode: roomCode, isCreator: isCreator, numPlayers: numPlayers);
         },
       ),
-      GoRoute(path: '/draw-lobby', builder: (c, s) => const DrawLobby()),
+      GoRoute(
+        path: '/draw-lobby',
+        builder: (c, s) => DrawLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/draw-waiting/:roomCode',
         builder: (c, s) {
@@ -196,7 +271,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return DrawScreen(roomCode: roomCode, isCreator: isCreator, maxPlayers: maxPlayers);
         },
       ),
-      GoRoute(path: '/trivia-lobby', builder: (c, s) => const TriviaLobby()),
+      GoRoute(
+        path: '/trivia-lobby',
+        builder: (c, s) => TriviaLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/trivia-waiting/:roomCode',
         builder: (c, s) {
@@ -215,7 +293,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           return TriviaScreen(roomCode: roomCode, isCreator: isCreator, category: category);
         },
       ),
-      GoRoute(path: '/meme-lobby', builder: (c, s) => const MemeLobby()),
+      GoRoute(
+        path: '/meme-lobby',
+        builder: (c, s) => MemeLobby(roomCode: s.uri.queryParameters['roomCode']),
+      ),
       GoRoute(
         path: '/meme-waiting/:roomCode',
         builder: (c, s) {

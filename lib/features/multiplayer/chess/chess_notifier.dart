@@ -70,16 +70,12 @@ class ChessNotifier extends StateNotifier<ChessState> {
             if (state.gameOver) return;
             try {
               final presenceState = _channel?.presenceState();
-              if (presenceState is! Map) return;
+              if (presenceState == null) return;
               final roles = <String>{};
-              for (final list in (presenceState as Map).values) {
-                if (list is List) {
-                  for (final p in list) {
-                    if (p is Presence) {
-                      final role = p.payload['role'];
-                      if (role is String) roles.add(role);
-                    }
-                  }
+              for (final singleState in presenceState) {
+                for (final p in singleState.presences) {
+                  final role = p.payload['role'];
+                  if (role is String) roles.add(role);
                 }
               }
               // If we are the only player left, declare win by forfeit.
@@ -87,7 +83,7 @@ class ChessNotifier extends StateNotifier<ChessState> {
                 state = state.copyWith(
                   gameOver: true,
                   winner: myColor,
-                  statusMsg: 'Opponent left the game. You win by default!',
+                  statusMsg: 'Opponent left! You Win! 🏆',
                 );
               }
             } catch (_) {}

@@ -210,6 +210,8 @@ class _IqPuzzleScreenState extends State<IqPuzzleScreen> with SingleTickerProvid
       } else {
         _shakeError("NOT ON THIS BANK!");
       }
+
+      _checkRules();
     });
   }
 
@@ -230,8 +232,19 @@ class _IqPuzzleScreenState extends State<IqPuzzleScreen> with SingleTickerProvid
   }
 
   void _checkRules() {
-    final left = _locations.entries.where((e) => e.value == Location.leftBank).map((e) => e.key).toList();
-    final right = _locations.entries.where((e) => e.value == Location.rightBank).map((e) => e.key).toList();
+    // Include entities in the boat as being on the bank where the boat is docked.
+    // This prevents false conflicts when unloading (farmer is still in boat supervising).
+    final effectiveLocation = <Entity, Location>{};
+    for (final entry in _locations.entries) {
+      if (entry.value == Location.boat) {
+        effectiveLocation[entry.key] = _boatLocation;
+      } else {
+        effectiveLocation[entry.key] = entry.value;
+      }
+    }
+
+    final left = effectiveLocation.entries.where((e) => e.value == Location.leftBank).map((e) => e.key).toList();
+    final right = effectiveLocation.entries.where((e) => e.value == Location.rightBank).map((e) => e.key).toList();
 
     bool checkBank(List<Entity> bank) {
       if (!bank.contains(Entity.farmer)) {

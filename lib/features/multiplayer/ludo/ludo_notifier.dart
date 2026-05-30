@@ -104,19 +104,15 @@ class LudoNotifier extends StateNotifier<LudoState> {
             if (state.gameOver) return;
             try {
               final presenceState = _channel?.presenceState();
-              if (presenceState is! Map) return;
+              if (presenceState == null) return;
               final onlinePlayerIndices = <int>{};
-              for (final list in (presenceState as Map).values) {
-                if (list is List) {
-                  for (final p in list) {
-                    if (p is Presence) {
-                      final val = p.payload['player'];
-                      if (val is int) {
-                        onlinePlayerIndices.add(val);
-                      } else if (val is num) {
-                        onlinePlayerIndices.add(val.toInt());
-                      }
-                    }
+              for (final singleState in presenceState) {
+                for (final p in singleState.presences) {
+                  final val = p.payload['player'];
+                  if (val is int) {
+                    onlinePlayerIndices.add(val);
+                  } else if (val is num) {
+                    onlinePlayerIndices.add(val.toInt());
                   }
                 }
               }

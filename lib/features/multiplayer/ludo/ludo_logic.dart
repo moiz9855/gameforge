@@ -343,7 +343,7 @@ LudoState removePlayer(LudoState state, int playerIdx) {
       gameOver: true,
       winner: newActive[0],
       statusMsg:
-          'Opponent left the game. You win by default!',
+          'Opponent left! You Win! 🏆',
     );
   }
 

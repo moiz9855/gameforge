@@ -113,6 +113,114 @@ class AchievementService {
       description: 'Win a Tug of War round in under 8 seconds.',
       badge: '💪',
     ),
+    Achievement(
+      id: 'runner_novice',
+      title: 'Runner Novice',
+      description: 'Reach a score of 50 in Runner.',
+      badge: '🏃',
+    ),
+    Achievement(
+      id: 'runner_legend',
+      title: 'Runner Legend',
+      description: 'Reach a score of 200 in Runner.',
+      badge: '🏆',
+    ),
+    Achievement(
+      id: 'archery_novice',
+      title: 'Sharpshooter',
+      description: 'Reach a score of 50 in Archery.',
+      badge: '🎯',
+    ),
+    Achievement(
+      id: 'archery_master',
+      title: 'Bullseye Master',
+      description: 'Reach a score of 100 in Archery.',
+      badge: '🏹',
+    ),
+    Achievement(
+      id: 'iq_puzzle_clear',
+      title: 'Logic Novice',
+      description: 'Clear River Cross in under 20 moves.',
+      badge: '🧩',
+    ),
+    Achievement(
+      id: 'iq_puzzle_expert',
+      title: 'Grandmaster Solver',
+      description: 'Clear River Cross in under 12 moves.',
+      badge: '🧠',
+    ),
+    Achievement(
+      id: 'memory_clear',
+      title: 'Pair Finder',
+      description: 'Clear Match Match in under 30 moves.',
+      badge: '🃏',
+    ),
+    Achievement(
+      id: 'memory_expert',
+      title: 'Zen Memory',
+      description: 'Clear Match Match in under 20 moves.',
+      badge: '👁️',
+    ),
+    Achievement(
+      id: 'basketball_novice',
+      title: 'Hoop Novice',
+      description: 'Reach a score of 10 in Hoop Master.',
+      badge: '🏀',
+    ),
+    Achievement(
+      id: 'basketball_allstar',
+      title: 'All-Star Dunker',
+      description: 'Reach a score of 30 in Hoop Master.',
+      badge: '🔥',
+    ),
+    Achievement(
+      id: 'slingshot_novice',
+      title: 'Sling Beginner',
+      description: 'Reach a score of 10 in Slingshot.',
+      badge: '🎪',
+    ),
+    Achievement(
+      id: 'slingshot_legend',
+      title: 'Slingshot Legend',
+      description: 'Reach a score of 30 in Slingshot.',
+      badge: '🚀',
+    ),
+    Achievement(
+      id: 'word_blast_novice',
+      title: 'Word Smith',
+      description: 'Reach a score of 30 in Word Blast.',
+      badge: '🔤',
+    ),
+    Achievement(
+      id: 'word_blast_expert',
+      title: 'Vocabulary King',
+      description: 'Reach a score of 80 in Word Blast.',
+      badge: '📖',
+    ),
+    Achievement(
+      id: 'color_rush_novice',
+      title: 'Color Novice',
+      description: 'Reach a score of 15 in Color Rush.',
+      badge: '🎨',
+    ),
+    Achievement(
+      id: 'color_rush_expert',
+      title: 'Chroma Master',
+      description: 'Reach a score of 40 in Color Rush.',
+      badge: '🌈',
+    ),
+    Achievement(
+      id: 'tower_stack_novice',
+      title: 'Tower Builder',
+      description: 'Reach a score of 10 in Tower Stack.',
+      badge: '🏗️',
+    ),
+    Achievement(
+      id: 'tower_stack_expert',
+      title: 'Sky Architect',
+      description: 'Reach a score of 25 in Tower Stack.',
+      badge: '🏰',
+    ),
   ];
 
   Future<void> init() async {
@@ -165,6 +273,15 @@ class AchievementService {
     await _prefs?.remove('ttt_draws');
     await _prefs?.remove('tow_wins');
     await _prefs?.remove('tow_best_time');
+    await _prefs?.remove('runner_hs');
+    await _prefs?.remove('archery_hs');
+    await _prefs?.remove('iq_puzzle_hs');
+    await _prefs?.remove('memory_match_hs');
+    await _prefs?.remove('basketball_hs');
+    await _prefs?.remove('slingshot_hs');
+    await _prefs?.remove('word_scramble_hs');
+    await _prefs?.remove('color_rush_hs');
+    await _prefs?.remove('tower_stack_hs');
   }
 
   /// High score helper functions
@@ -176,21 +293,60 @@ class AchievementService {
   Future<void> saveHighScore(String gameId, int score) async {
     await init();
     final currentHigh = await getHighScore(gameId);
-    if (score > currentHigh) {
-      await _prefs?.setInt('${gameId}_hs', score);
-      
-      // Auto-check achievement thresholds based on high score updates
-      if (gameId == 'snake') {
-        if (score >= 10) await unlock('snake_apprentice');
-        if (score >= 30) await unlock('snake_master');
-      } else if (gameId == 'tetris') {
-        if (score >= 500) await unlock('block_stacker');
-        if (score >= 1500) await unlock('tetris_survivor');
-      } else if (gameId == 'flappy') {
-        if (score >= 5) await unlock('first_flight');
-        if (score >= 20) await unlock('sky_legend');
-      }
+    
+    final bool isLowerBetter = gameId == 'iq_puzzle' || gameId == 'memory_match';
+    bool isNewRecord = false;
+    if (currentHigh == 0) {
+      isNewRecord = score > 0;
+    } else if (isLowerBetter) {
+      isNewRecord = score < currentHigh && score > 0;
+    } else {
+      isNewRecord = score > currentHigh;
     }
+
+    if (isNewRecord) {
+      await _prefs?.setInt('${gameId}_hs', score);
+    }
+
+    // Auto-check achievement thresholds based on score updates
+    if (gameId == 'snake') {
+      if (score >= 10) await unlock('snake_apprentice');
+      if (score >= 30) await unlock('snake_master');
+    } else if (gameId == 'tetris') {
+      if (score >= 500) await unlock('block_stacker');
+      if (score >= 1500) await unlock('tetris_survivor');
+    } else if (gameId == 'flappy') {
+      if (score >= 5) await unlock('first_flight');
+      if (score >= 20) await unlock('sky_legend');
+    } else if (gameId == 'runner') {
+      if (score >= 50) await unlock('runner_novice');
+      if (score >= 200) await unlock('runner_legend');
+    } else if (gameId == 'archery') {
+      if (score >= 50) await unlock('archery_novice');
+      if (score >= 100) await unlock('archery_master');
+    } else if (gameId == 'iq_puzzle') {
+      if (score <= 20 && score > 0) await unlock('iq_puzzle_clear');
+      if (score <= 12 && score > 0) await unlock('iq_puzzle_expert');
+    } else if (gameId == 'memory_match') {
+      if (score <= 30 && score > 0) await unlock('memory_clear');
+      if (score <= 20 && score > 0) await unlock('memory_expert');
+    } else if (gameId == 'basketball') {
+      if (score >= 10) await unlock('basketball_novice');
+      if (score >= 30) await unlock('basketball_allstar');
+    } else if (gameId == 'slingshot') {
+      if (score >= 10) await unlock('slingshot_novice');
+      if (score >= 30) await unlock('slingshot_legend');
+    } else if (gameId == 'word_scramble') {
+      if (score >= 30) await unlock('word_blast_novice');
+      if (score >= 80) await unlock('word_blast_expert');
+    } else if (gameId == 'color_rush') {
+      if (score >= 15) await unlock('color_rush_novice');
+      if (score >= 40) await unlock('color_rush_expert');
+    } else if (gameId == 'tower_stack') {
+      if (score >= 10) await unlock('tower_stack_novice');
+      if (score >= 25) await unlock('tower_stack_expert');
+    }
+
     // Sync to Supabase in all cases
     await ProgressSyncService.instance.saveProgress(gameId, highScore: score);
   }

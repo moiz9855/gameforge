@@ -43,6 +43,9 @@ class _UnoScreenState extends State<UnoScreen> {
   bool _opponentLeft = false;
   String _winnerName = '';
 
+  final Map<String, List<UnoCard>> _allHands = {};
+  final Set<String> _playersWhoCalledUno = {};
+
   int _timerValue = 30;
   Timer? _turnTimer;
 
@@ -106,13 +109,15 @@ class _UnoScreenState extends State<UnoScreen> {
           final counts = data['opponentCounts'] as Map;
 
           setState(() {
+            _allHands.clear();
+            hands.forEach((key, val) {
+              final list = (val as List).map((c) => UnoCard.fromJson(Map<String, dynamic>.from(c))).toList();
+              _allHands[key as String] = list;
+            });
+
+            _myHand = _allHands[_myId] ?? [];
             _deck = deckJson.map((c) => UnoCard.fromJson(Map<String, dynamic>.from(c))).toList();
             _discardPile = discardJson.map((c) => UnoCard.fromJson(Map<String, dynamic>.from(c))).toList();
-            
-            final myHandJson = hands[_myId] as List?;
-            if (myHandJson != null) {
-              _myHand = myHandJson.map((c) => UnoCard.fromJson(Map<String, dynamic>.from(c))).toList();
-            }
 
             counts.forEach((key, val) {
               if (key != _myId) {
@@ -124,9 +129,26 @@ class _UnoScreenState extends State<UnoScreen> {
             _direction = data['direction'] as int;
             final wc = data['selectedWildColor'] as int?;
             _selectedWildColor = wc != null ? UnoColor.values[wc] : null;
+
+            // Remove any player whose cards count went above 1 from called UNO list
+            _playersWhoCalledUno.removeWhere((id) {
+              final count = id == _myId ? _myHand.length : (_opponentCardCounts[id] ?? 0);
+              return count > 1;
+            });
           });
 
           _startTurnTimer();
+        },
+      )
+      .onBroadcast(
+        event: 'called_uno_broadcast',
+        callback: (payload) {
+          if (!mounted) return;
+          final data = payload['payload'] ?? payload;
+          final pId = data['playerId'] as String;
+          setState(() {
+            _playersWhoCalledUno.add(pId);
+          });
         },
       )
       .onBroadcast(
@@ -140,6 +162,7 @@ class _UnoScreenState extends State<UnoScreen> {
           if (targetId == _myId) {
             setState(() {
               _myHand.addAll(cards);
+              _allHands[_myId] = _myHand;
             });
             SoundService.instance.play(SoundType.error);
             ScaffoldMessenger.of(context).showSnackBar(
@@ -148,6 +171,9 @@ class _UnoScreenState extends State<UnoScreen> {
           } else {
             setState(() {
               _opponentCardCounts[targetId] = (_opponentCardCounts[targetId] ?? 0) + 2;
+              if (_allHands.containsKey(targetId)) {
+                _allHands[targetId]!.addAll(cards);
+              }
             });
           }
         },
@@ -184,12 +210,15 @@ class _UnoScreenState extends State<UnoScreen> {
     final deck = generateUnoDeck();
     final hands = <String, List<Map<String, dynamic>>>{};
     final opponentCounts = <String, int>{};
+    _allHands.clear();
+    _playersWhoCalledUno.clear();
 
     for (var p in _players) {
       final hand = <UnoCard>[];
       for (int i = 0; i < 7; i++) {
         hand.add(deck.removeLast());
       }
+      _allHands[p['id']!] = hand;
       hands[p['id']!] = hand.map((c) => c.toJson()).toList();
       opponentCounts[p['id']!] = 7;
     }
@@ -261,6 +290,31 @@ class _UnoScreenState extends State<UnoScreen> {
     });
   }
 
+  void _syncCurrentState() {
+    final hands = <String, List<Map<String, dynamic>>>{};
+    final opponentCounts = <String, int>{};
+
+    _allHands.forEach((key, val) {
+      hands[key] = val.map((c) => c.toJson()).toList();
+      opponentCounts[key] = val.length;
+    });
+
+    _channel?.sendBroadcastMessage(
+      event: 'game_state_sync',
+      payload: {
+        'hands': hands,
+        'deck': _deck.map((c) => c.toJson()).toList(),
+        'discard': _discardPile.map((c) => c.toJson()).toList(),
+        'opponentCounts': opponentCounts,
+        'currentTurn': _currentTurnId,
+        'direction': _direction,
+        'selectedWildColor': _selectedWildColor?.index,
+      },
+    );
+
+    _updateDbState(hands, _deck, _discardPile, _currentTurnId, _direction, _selectedWildColor?.index);
+  }
+
   void _playCard(UnoCard card) async {
     if (!_isMyTurn || _gameOver) return;
     
@@ -279,10 +333,12 @@ class _UnoScreenState extends State<UnoScreen> {
     SoundService.instance.play(SoundType.coin);
     setState(() {
       _myHand.remove(card);
+      _allHands[_myId] = _myHand;
       _discardPile.add(card);
       _selectedWildColor = finalWildColor;
       if (_myHand.length != 1) {
         _calledUno = false;
+        _playersWhoCalledUno.remove(_myId);
       }
     });
 
@@ -316,6 +372,7 @@ class _UnoScreenState extends State<UnoScreen> {
     final drawn = _deck.removeLast();
     setState(() {
       _myHand.add(drawn);
+      _allHands[_myId] = _myHand;
     });
 
     SoundService.instance.play(SoundType.snakeMove);
@@ -327,7 +384,13 @@ class _UnoScreenState extends State<UnoScreen> {
     int skipCount = 1;
     if (playedCard != null) {
       if (playedCard.type == UnoType.skip) skipCount = 2;
-      if (playedCard.type == UnoType.reverse) _direction = -_direction;
+      if (playedCard.type == UnoType.reverse) {
+        if (_players.length == 2) {
+          skipCount = 2;
+        } else {
+          _direction = -_direction;
+        }
+      }
     }
 
     // Find next player index
@@ -337,19 +400,6 @@ class _UnoScreenState extends State<UnoScreen> {
 
     final nextPlayerId = _players[nextIdx]['id']!;
 
-    // Check Action draws
-    final hands = <String, List<Map<String, dynamic>>>{};
-    final opponentCounts = <String, int>{};
-
-    for (var p in _players) {
-      if (p['id'] == _myId) {
-        hands[_myId] = _myHand.map((c) => c.toJson()).toList();
-        opponentCounts[_myId] = _myHand.length;
-      } else {
-        opponentCounts[p['id']!] = _opponentCardCounts[p['id']!] ?? 7;
-      }
-    }
-
     if (playedCard != null) {
       if (playedCard.type == UnoType.drawTwo) {
         // Draw 2 for next player
@@ -357,6 +407,7 @@ class _UnoScreenState extends State<UnoScreen> {
         for (int i = 0; i < 2; i++) {
           if (_deck.isNotEmpty) drawList.add(_deck.removeLast());
         }
+        _allHands[nextPlayerId] = [...(_allHands[nextPlayerId] ?? []), ...drawList];
         _channel?.sendBroadcastMessage(
           event: 'action_uno_catch',
           payload: {
@@ -364,13 +415,13 @@ class _UnoScreenState extends State<UnoScreen> {
             'cards': drawList.map((c) => c.toJson()).toList(),
           },
         );
-        opponentCounts[nextPlayerId] = (opponentCounts[nextPlayerId] ?? 0) + 2;
       } else if (playedCard.type == UnoType.wildDrawFour) {
         // Draw 4 for next player
         final drawList = <UnoCard>[];
         for (int i = 0; i < 4; i++) {
           if (_deck.isNotEmpty) drawList.add(_deck.removeLast());
         }
+        _allHands[nextPlayerId] = [...(_allHands[nextPlayerId] ?? []), ...drawList];
         _channel?.sendBroadcastMessage(
           event: 'action_uno_catch',
           payload: {
@@ -378,32 +429,25 @@ class _UnoScreenState extends State<UnoScreen> {
             'cards': drawList.map((c) => c.toJson()).toList(),
           },
         );
-        opponentCounts[nextPlayerId] = (opponentCounts[nextPlayerId] ?? 0) + 4;
       }
     }
 
-    // Sync state
-    _channel?.sendBroadcastMessage(
-      event: 'game_state_sync',
-      payload: {
-        'hands': hands,
-        'deck': _deck.map((c) => c.toJson()).toList(),
-        'discard': _discardPile.map((c) => c.toJson()).toList(),
-        'opponentCounts': opponentCounts,
-        'currentTurn': nextPlayerId,
-        'direction': _direction,
-        'selectedWildColor': _selectedWildColor?.index,
-      },
-    );
-
-    _updateDbState(hands, _deck, _discardPile, nextPlayerId, _direction, _selectedWildColor?.index);
+    _currentTurnId = nextPlayerId;
+    _syncCurrentState();
   }
 
   void _callUno() {
     if (_myHand.length != 1 || _calledUno) return;
     setState(() {
       _calledUno = true;
+      _playersWhoCalledUno.add(_myId);
     });
+    _channel?.sendBroadcastMessage(
+      event: 'called_uno_broadcast',
+      payload: {
+        'playerId': _myId,
+      },
+    );
     SoundService.instance.play(SoundType.winFanfare);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('🎉 YOU CALLED UNO!')),
@@ -412,13 +456,14 @@ class _UnoScreenState extends State<UnoScreen> {
 
   void _catchOpponent() {
     // Find if any opponent has 1 card left and hasn't called UNO
-    // For simplicity in broadcast, if they didn't broadcast 'called_uno', we catch them!
     for (var entry in _opponentCardCounts.entries) {
-      if (entry.value == 1) {
+      if (entry.value == 1 && !_playersWhoCalledUno.contains(entry.key)) {
         final catchCards = <UnoCard>[];
         for (int i = 0; i < 2; i++) {
           if (_deck.isNotEmpty) catchCards.add(_deck.removeLast());
         }
+        _allHands[entry.key] = [...(_allHands[entry.key] ?? []), ...catchCards];
+        
         _channel?.sendBroadcastMessage(
           event: 'action_uno_catch',
           payload: {
@@ -427,6 +472,8 @@ class _UnoScreenState extends State<UnoScreen> {
           },
         );
         SoundService.instance.play(SoundType.winFanfare);
+        
+        _syncCurrentState();
         return;
       }
     }
@@ -740,12 +787,16 @@ class _UnoScreenState extends State<UnoScreen> {
                       color: canPlay ? cardColor : cardColor.withValues(alpha: 0.35),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: canPlay ? AppColors.primary : Colors.white12,
-                        width: canPlay ? 2.5 : 1,
+                        color: canPlay ? const Color(0xFFF05A28) : Colors.white12,
+                        width: canPlay ? 3.0 : 1,
                       ),
                       boxShadow: canPlay
                           ? [
-                              BoxShadow(color: cardColor.withValues(alpha: 0.6), blurRadius: 8),
+                              BoxShadow(
+                                color: const Color(0xFFF05A28).withValues(alpha: 0.8),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
                             ]
                           : [],
                     ),
@@ -787,21 +838,13 @@ class _UnoScreenState extends State<UnoScreen> {
               const Text('🏆', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 12),
               Text(
-                'OPPONENT LEFT!',
+                'Opponent left! You Win! 🏆',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.pressStart2p(
-                  fontSize: 10,
+                  fontSize: 12,
                   color: AppColors.success,
                   fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Opponent left the match. You Win by default!',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.rajdhani(
-                  fontSize: 16,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
+                  height: 1.5,
                 ),
               ),
               const SizedBox(height: 20),

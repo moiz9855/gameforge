@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:game_forge/core/constants/app_colors.dart';
 import 'package:game_forge/core/widgets/gameforge_app_bar.dart';
-import 'package:game_forge/features/auth/presentation/auth_controller.dart';
+
 import 'package:game_forge/features/multiplayer/meme/meme_templates.dart';
 
 class MemeScreen extends ConsumerStatefulWidget {
@@ -55,6 +55,7 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
   final TextEditingController _captionController = TextEditingController();
 
   late AnimationController _pulseAnim;
+  bool _opponentLeft = false;
 
   @override
   void initState() {
@@ -66,6 +67,47 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
     )..repeat(reverse: true);
     
     _initMultiplayer();
+  }
+
+  Widget _buildMemeWithCaption(String imageUrl, String caption, {required double fontSize, double? height, double? width}) {
+    return Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        CachedNetworkImage(
+          imageUrl: imageUrl,
+          height: height,
+          width: width,
+          fit: BoxFit.contain,
+          placeholder: (context, url) => const Center(child: CircularProgressIndicator(color: Color(0xFFF05A28))),
+          errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
+        ),
+        if (caption.isNotEmpty)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+              color: Colors.black.withValues(alpha: 0.6),
+              child: Text(
+                caption.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    const Shadow(offset: Offset(-1.5, -1.5), color: Colors.black),
+                    const Shadow(offset: Offset(1.5, -1.5), color: Colors.black),
+                    const Shadow(offset: Offset(1.5, 1.5), color: Colors.black),
+                    const Shadow(offset: Offset(-1.5, 1.5), color: Colors.black),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _initMultiplayer() async {
@@ -96,8 +138,8 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
         if (!mounted) return;
         final state = _channel.presenceState();
         _presentIds.clear();
-        for (final s in state) {
-          for (final p in s.presences) {
+        for (final singleState in state) {
+          for (final p in singleState.presences) {
             final id = p.payload['id'] as String?;
             if (id != null) _presentIds.add(id);
           }
@@ -131,6 +173,12 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
       setState(() => _amIHost = amIHostNow);
       // If we became host mid-game, we could hypothetically resume logic, 
       // but for simplicity we rely on the current phase timers if we transition gracefully.
+    }
+
+    if (_players.length > 1 && _presentIds.length == 1 && _presentIds.contains(_myId)) {
+      setState(() {
+        _opponentLeft = true;
+      });
     }
   }
 
@@ -265,7 +313,6 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
       _currentMeme = Map<String, String>.from(payload['meme']);
       _phase = 'caption';
       _captions.clear();
-      _votes.clear();
       _votes.clear();
       _myVote = null;
       _iSubmittedCaption = false;
@@ -449,6 +496,47 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
   }
   
   Widget _buildPhaseView() {
+    if (_opponentLeft) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 80)),
+              const SizedBox(height: 24),
+              Text(
+                'Opponent left! You Win! 🏆',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.rajdhani(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amberAccent,
+                ),
+              ),
+              const SizedBox(height: 36),
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  backgroundColor: const Color(0xFFF05A28),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                ),
+                child: Text(
+                  'EXIT TO LOBBY',
+                  style: GoogleFonts.rajdhani(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     switch (_phase) {
       case 'loading':
         return const Center(child: CircularProgressIndicator(color: Color(0xFFF05A28)));
@@ -478,11 +566,10 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.white,
               ),
-              child: CachedNetworkImage(
-                imageUrl: _currentMeme?['url'] ?? '',
-                fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.red),
+              child: _buildMemeWithCaption(
+                _currentMeme?['url'] ?? '',
+                _captionController.text,
+                fontSize: 16,
               ),
             ),
           ),
@@ -613,33 +700,59 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
                 return GestureDetector(
                   onTap: () => _submitVote(authorId),
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(20),
+                    margin: const EdgeInsets.only(bottom: 16),
                     decoration: BoxDecoration(
                       color: isSelected ? const Color(0xFFF05A28).withValues(alpha: 0.2) : const Color(0xFF141418),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected ? const Color(0xFFF05A28) : AppColors.border,
-                        width: isSelected ? 2 : 1,
+                        width: isSelected ? 2.5 : 1,
                       ),
+                      boxShadow: isSelected ? [
+                        BoxShadow(
+                          color: const Color(0xFFF05A28).withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                        )
+                      ] : null,
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            text,
-                            style: GoogleFonts.rajdhani(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w600,
-                              color: isMine ? AppColors.textSecondary : Colors.white,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 180,
+                            width: double.infinity,
+                            color: Colors.black,
+                            child: _buildMemeWithCaption(
+                              _currentMeme?['url'] ?? '',
+                              text,
+                              fontSize: 10,
                             ),
                           ),
-                        ),
-                        if (isMine)
-                          const Icon(Icons.person, color: AppColors.textSecondary, size: 16),
-                        if (isSelected)
-                          const Icon(Icons.check_circle_rounded, color: Color(0xFFF05A28)),
-                      ],
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    isMine ? 'Your Submission' : 'Tap to Vote',
+                                    style: GoogleFonts.rajdhani(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: isMine ? AppColors.textSecondary : (isSelected ? const Color(0xFFF05A28) : Colors.white),
+                                    ),
+                                  ),
+                                ),
+                                if (isMine)
+                                  const Icon(Icons.person, color: AppColors.textSecondary, size: 18),
+                                if (isSelected)
+                                  const Icon(Icons.check_circle_rounded, color: Color(0xFFF05A28)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -656,6 +769,8 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
   Widget _buildResultsPhase() {
     // Sort authors by round points
     final sortedAuthors = _roundPoints.keys.toList()..sort((a, b) => _roundPoints[b]!.compareTo(_roundPoints[a]!));
+    final winnerAuthorId = sortedAuthors.isNotEmpty ? sortedAuthors.first : null;
+    final winningCaption = winnerAuthorId != null ? (_captions[winnerAuthorId] ?? '') : '';
     
     return Column(
       children: [
@@ -669,9 +784,10 @@ class _MemeScreenState extends ConsumerState<MemeScreen> with TickerProviderStat
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.white,
               ),
-              child: CachedNetworkImage(
-                imageUrl: _currentMeme?['url'] ?? '',
-                fit: BoxFit.contain,
+              child: _buildMemeWithCaption(
+                _currentMeme?['url'] ?? '',
+                winningCaption,
+                fontSize: 14,
               ),
             ),
           ),

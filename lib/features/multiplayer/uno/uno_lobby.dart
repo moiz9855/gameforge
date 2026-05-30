@@ -8,7 +8,8 @@ import 'package:game_forge/core/widgets/room_code_boxes.dart';
 import 'package:game_forge/core/services/sound_service.dart';
 
 class UnoLobby extends StatefulWidget {
-  const UnoLobby({super.key});
+  final String? roomCode;
+  const UnoLobby({super.key, this.roomCode});
 
   @override
   State<UnoLobby> createState() => _UnoLobbyState();
@@ -17,6 +18,14 @@ class UnoLobby extends StatefulWidget {
 class _UnoLobbyState extends State<UnoLobby> {
   String _joinCode = '';
   int _playersCount = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _joinCode = widget.roomCode!;
+    }
+  }
 
   String _newCode() {
     final raw = const Uuid().v4().replaceAll('-', '').toUpperCase();
@@ -179,6 +188,7 @@ class _UnoLobbyState extends State<UnoLobby> {
             ),
             const SizedBox(height: 14),
             RoomCodeBoxes(
+              initialCode: widget.roomCode,
               onChanged: (code) => setState(() => _joinCode = code),
             ),
             const SizedBox(height: 20),

@@ -42,6 +42,7 @@ class _DrawScreenState extends State<DrawScreen> {
 
 
   bool _hasGuessedCorrectly = false;
+  bool _opponentLeft = false;
   final Set<String> _roundCorrectGuessers = {};
 
   final TextEditingController _guessController = TextEditingController();
@@ -113,7 +114,7 @@ class _DrawScreenState extends State<DrawScreen> {
 
           if (_players.length == 1 && _currentDrawerId.isNotEmpty) {
             setState(() {
-              _gameStatus = 'gameOver';
+              _opponentLeft = true;
             });
             _countdownTimer?.cancel();
           }
@@ -490,9 +491,9 @@ class _DrawScreenState extends State<DrawScreen> {
     
     // Reveal letters based on timer
     for (int i = 0; i < chars.length; i++) {
-      if (_timerValue <= 20 && i == 0) {
+      if (_timerValue <= 40 && i == 0) {
         list.add(chars[i]);
-      } else if (_timerValue <= 40 && i == chars.length - 1) {
+      } else if (_timerValue <= 20 && i == chars.length - 1) {
         list.add(chars[i]);
       } else {
         list.add('_');
@@ -522,19 +523,64 @@ class _DrawScreenState extends State<DrawScreen> {
     super.dispose();
   }
 
+  Widget _buildOpponentLeftOverlay() {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.85),
+      child: Center(
+        child: Container(
+          width: 280,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D1117),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.success, width: 2),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🏆', style: TextStyle(fontSize: 48)),
+              const SizedBox(height: 12),
+              Text(
+                'Opponent left! You Win! 🏆',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.pressStart2p(
+                  fontSize: 12,
+                  color: AppColors.success,
+                  fontWeight: FontWeight.bold,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () => context.go('/'),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.success),
+                child: Text('EXIT TO LOBBY', style: GoogleFonts.pressStart2p(fontSize: 8, color: Colors.white)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: CrtOverlay(
-          child: Column(
+          child: Stack(
             children: [
-              _buildHeader(),
-              if (_gameStatus == 'selecting_word') _buildWordSelectionView(),
-              if (_gameStatus == 'drawing') _buildGameplayView(),
-              if (_gameStatus == 'scoreboard') _buildScoreboardView(),
-              if (_gameStatus == 'gameOver') _buildGameOverView(),
+              Column(
+                children: [
+                  _buildHeader(),
+                  if (_gameStatus == 'selecting_word') _buildWordSelectionView(),
+                  if (_gameStatus == 'drawing') _buildGameplayView(),
+                  if (_gameStatus == 'scoreboard') _buildScoreboardView(),
+                  if (_gameStatus == 'gameOver') _buildGameOverView(),
+                ],
+              ),
+              if (_opponentLeft) _buildOpponentLeftOverlay(),
             ],
           ),
         ),

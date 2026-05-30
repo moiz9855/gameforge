@@ -8,7 +8,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 /// Lobby: full-width orange create + 6-box join (JOIN enabled only at 6 chars).
 class ChessLobby extends StatefulWidget {
-  const ChessLobby({super.key});
+  final String? roomCode;
+  const ChessLobby({super.key, this.roomCode});
 
   @override
   State<ChessLobby> createState() => _ChessLobbyState();
@@ -16,6 +17,14 @@ class ChessLobby extends StatefulWidget {
 
 class _ChessLobbyState extends State<ChessLobby> {
   String _joinCode = '';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _joinCode = widget.roomCode!;
+    }
+  }
 
   String _newCode() {
     final raw = const Uuid().v4().replaceAll('-', '').toUpperCase();
@@ -123,6 +132,7 @@ class _ChessLobbyState extends State<ChessLobby> {
             ),
             const SizedBox(height: 14),
             RoomCodeBoxes(
+              initialCode: widget.roomCode,
               onChanged: (code) => setState(() => _joinCode = code),
             ),
             const SizedBox(height: 20),

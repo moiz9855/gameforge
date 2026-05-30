@@ -22,6 +22,7 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
   int _score = 0;
   int _balls = 3;
   int _level = 1;
+  bool _gameStarted = false;
 
   int _finalScore = 0;
   bool _isNewRecord = false;
@@ -41,29 +42,37 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
       bestScore: hs,
       onStateUpdate: (score, balls, level) {
         if (mounted) {
-          setState(() {
-            _score = score;
-            _balls = balls;
-            _level = level;
-            _state = _game!.state;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _score = score;
+                _balls = balls;
+                _level = level;
+                _state = _game!.state;
+              });
+            }
           });
         }
       },
       onGameOver: (score, levels, isNewRecord) {
         if (mounted) {
-          setState(() {
-            _state = SBGameState.gameOver;
-            _finalScore = score;
-            _isNewRecord = isNewRecord;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _state = SBGameState.gameOver;
+                _finalScore = score;
+                _isNewRecord = isNewRecord;
+              });
+              AchievementService.instance.saveHighScore('slingshot', score);
+              HapticFeedback.heavyImpact();
+              if (isNewRecord) {
+                SoundService.instance.play(SoundType.winFanfare);
+                setState(() => _bestScore = score);
+              } else {
+                SoundService.instance.play(SoundType.gameOver);
+              }
+            }
           });
-          AchievementService.instance.saveHighScore('slingshot', score);
-          HapticFeedback.heavyImpact();
-          if (isNewRecord) {
-            SoundService.instance.play(SoundType.winFanfare);
-            setState(() => _bestScore = score);
-          } else {
-            SoundService.instance.play(SoundType.gameOver);
-          }
         }
       },
     );
@@ -78,6 +87,7 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
     if (_game == null) return;
     SoundService.instance.play(SoundType.gameStart);
     HapticFeedback.lightImpact();
+    setState(() => _gameStarted = true);
     _game!.startGame();
   }
 
@@ -96,7 +106,7 @@ class _SlingshotScreenState extends State<SlingshotScreen> {
               if (_state != SBGameState.gameOver && _state != SBGameState.levelComplete)
                 IgnorePointer(child: _buildHud()),
 
-              if (_state == SBGameState.ready && _score == 0 && _level == 1 && _balls == 3) _buildStartOverlay(),
+              if (!_gameStarted) _buildStartOverlay(),
 
               if (_state == SBGameState.levelComplete) _buildCompleteOverlay(),
               if (_state == SBGameState.gameOver) _buildGameOverOverlay(),

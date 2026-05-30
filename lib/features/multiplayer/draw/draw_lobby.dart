@@ -8,7 +8,8 @@ import 'package:game_forge/core/widgets/room_code_boxes.dart';
 import 'package:game_forge/core/services/sound_service.dart';
 
 class DrawLobby extends StatefulWidget {
-  const DrawLobby({super.key});
+  final String? roomCode;
+  const DrawLobby({super.key, this.roomCode});
 
   @override
   State<DrawLobby> createState() => _DrawLobbyState();
@@ -17,6 +18,14 @@ class DrawLobby extends StatefulWidget {
 class _DrawLobbyState extends State<DrawLobby> {
   String _joinCode = '';
   int _playerLimit = 4;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.roomCode != null) {
+      _joinCode = widget.roomCode!;
+    }
+  }
 
   String _newCode() {
     final raw = const Uuid().v4().replaceAll('-', '').toUpperCase();
@@ -166,6 +175,7 @@ class _DrawLobbyState extends State<DrawLobby> {
             ),
             const SizedBox(height: 14),
             RoomCodeBoxes(
+              initialCode: widget.roomCode,
               onChanged: (code) => setState(() => _joinCode = code),
             ),
             const SizedBox(height: 20),

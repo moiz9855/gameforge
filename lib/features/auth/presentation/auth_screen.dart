@@ -216,7 +216,72 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               : Text(isLogin ? 'START GAME' : 'JOIN LOBBY'),
                         ),
                       ).animate().fade(delay: 700.ms).scale(),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 18),
+
+                      // OR Divider
+                      const Row(
+                        children: [
+                          Expanded(child: Divider(color: AppColors.border, thickness: 1)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              '— OR —',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: AppColors.border, thickness: 1)),
+                        ],
+                      ).animate().fade(delay: 750.ms),
+                      const SizedBox(height: 18),
+
+                      // Google Sign In Button
+                      SizedBox(
+                        width: double.infinity,
+                        height: 52,
+                        child: ElevatedButton(
+                          onPressed: authState.isLoading
+                              ? null
+                              : () => ref.read(authControllerProvider.notifier).signInWithGoogle(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF1F1F1F),
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: authState.isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFF1F1F1F),
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    GoogleLogo(size: 18),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'Continue with Google',
+                                      style: TextStyle(
+                                        color: Color(0xFF1F1F1F),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ).animate().fade(delay: 800.ms),
+                      const SizedBox(height: 12),
 
                       // Toggle Login/Signup
                       TextButton(
@@ -231,7 +296,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               : 'Already have an account? Login',
                           style: const TextStyle(color: AppColors.textSecondary),
                         ),
-                      ).animate().fade(delay: 800.ms),
+                      ).animate().fade(delay: 850.ms),
                     ],
                   ),
                 ),
@@ -242,4 +307,58 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       ),
     );
   }
+}
+
+class GoogleLogo extends StatelessWidget {
+  final double size;
+  const GoogleLogo({super.key, this.size = 20});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: Size(size, size),
+      painter: _GoogleLogoPainter(),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double w = size.width;
+    final double h = size.height;
+    final Paint paint = Paint()..style = PaintingStyle.fill;
+    final rect = Rect.fromLTWH(0, 0, w, h);
+    
+    // 1. Red (Top)
+    paint.color = const Color(0xFFEA4335);
+    canvas.drawArc(rect, -3.14159 * 0.75, -3.14159 * 0.5, true, paint);
+    
+    // 2. Yellow (Left)
+    paint.color = const Color(0xFFFBBC05);
+    canvas.drawArc(rect, -3.14159 * 1.25, -3.14159 * 0.5, true, paint);
+    
+    // 3. Green (Bottom)
+    paint.color = const Color(0xFF34A853);
+    canvas.drawArc(rect, -3.14159 * 1.75, -3.14159 * 0.5, true, paint);
+    
+    // 4. Blue (Right)
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawArc(rect, -3.14159 * 0.25, -3.14159 * 0.5, true, paint);
+
+    // 5. White Cutout (Inner Circle)
+    paint.color = Colors.white;
+    canvas.drawCircle(Offset(w * 0.5, h * 0.5), w * 0.32, paint);
+    
+    // 6. Blue Horizontal Bar
+    paint.color = const Color(0xFF4285F4);
+    canvas.drawRect(Rect.fromLTRB(w * 0.5, h * 0.35, w * 0.94, h * 0.65), paint);
+    
+    // 7. White Gap sector
+    paint.color = Colors.white;
+    canvas.drawArc(rect, -3.14159 * 0.25, 3.14159 * 0.15, true, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

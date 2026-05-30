@@ -311,7 +311,7 @@ class _MemeWaitingRoomState extends State<MemeWaitingRoom> with SingleTickerProv
               ),
 
             const SizedBox(height: 32),
-            FriendInvitePanel(roomCode: widget.roomCode, gameType: 'Meme Battle'),
+            FriendInvitePanel(roomCode: widget.roomCode, gameType: 'meme'),
           ],
         ),
       ),
