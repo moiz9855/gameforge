@@ -11,6 +11,8 @@ import 'package:game_forge/features/game_builder/presentation/builder_screen.dar
 import 'package:game_forge/features/game_player/presentation/player_screen.dart';
 import 'package:game_forge/features/profile/presentation/profile_screen.dart';
 import 'package:game_forge/features/profile/presentation/invite_friend_screen.dart';
+import 'package:game_forge/features/chat/chat_screen.dart';
+import 'package:game_forge/features/chat/conversations_screen.dart';
 import 'package:game_forge/features/profile/presentation/friend_requests_screen.dart';
 import 'package:game_forge/features/arcade/games/snake/snake_screen.dart';
 import 'package:game_forge/features/arcade/games/tetris/tetris_screen.dart';
@@ -143,6 +145,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
       GoRoute(path: '/invite-friend', builder: (c, s) => const InviteFriendScreen()),
       GoRoute(path: '/friend-requests', builder: (c, s) => const FriendRequestsScreen()),
+      GoRoute(
+        path: '/chat/:friendId',
+        builder: (c, s) => ChatScreen(friendId: s.pathParameters['friendId']!),
+      ),
+      GoRoute(
+        path: '/conversations',
+        builder: (c, s) => const ConversationsScreen(),
+      ),
       GoRoute(
         path: '/arcade',
         redirect: (context, state) {

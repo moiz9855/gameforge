@@ -6,6 +6,7 @@ import 'package:game_forge/core/constants/app_colors.dart';
 import 'package:game_forge/core/widgets/gameforge_app_bar.dart';
 import 'package:game_forge/features/auth/data/auth_repository.dart';
 import 'package:game_forge/features/home/domain/game.dart';
+import 'package:game_forge/core/services/chat_service.dart';
 import 'home_controller.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -97,6 +98,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       backgroundColor: AppColors.background,
       appBar: GameForgeAppBar(
         actions: [
+          // Messages icon with unread badge
+          _MessagesIconButton(),
           IconButton(
             icon: const Icon(Icons.person_rounded),
             color: AppColors.fire2,
@@ -155,6 +158,75 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MessagesIconButton extends StatefulWidget {
+  @override
+  State<_MessagesIconButton> createState() => _MessagesIconButtonState();
+}
+
+class _MessagesIconButtonState extends State<_MessagesIconButton> {
+  int _totalUnread = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshUnread();
+    // Listen for new messages to update badge
+    ChatService.instance.onMessageReceived.listen((_) {
+      if (mounted) _refreshUnread();
+    });
+  }
+
+  Future<void> _refreshUnread() async {
+    try {
+      final convs = await ChatService.instance.loadConversations();
+      if (mounted) {
+        int total = 0;
+        for (final c in convs) {
+          total += (c['unread_count'] as int? ?? 0);
+        }
+        setState(() => _totalUnread = total);
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chat_rounded),
+          color: AppColors.textSecondary,
+          onPressed: () async {
+            await context.push('/conversations');
+            _refreshUnread();
+          },
+        ),
+        if (_totalUnread > 0)
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                _totalUnread > 99 ? '99+' : '$_totalUnread',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

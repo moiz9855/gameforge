@@ -17,6 +17,8 @@ dependencies:
   # Backend
   supabase_flutter: ^2.5.0
   google_sign_in: ^6.2.1
+  firebase_core: ^3.0.0
+  firebase_messaging: ^15.0.0
   
   # Navigation
   go_router: ^14.0.0

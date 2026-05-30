@@ -9,6 +9,7 @@ import 'package:game_forge/core/widgets/gameforge_app_bar.dart';
 import 'package:game_forge/features/auth/data/auth_repository.dart';
 import 'package:game_forge/features/home/presentation/widgets/game_card.dart';
 import 'package:game_forge/core/services/sound_service.dart';
+import 'package:game_forge/core/services/chat_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'my_games_controller.dart';
 import 'friends_controller.dart';
@@ -587,13 +588,48 @@ class CategoryBarChart extends StatelessWidget {
   }
 }
 
-class _FriendsTabBody extends ConsumerWidget {
+class _FriendsTabBody extends ConsumerStatefulWidget {
   final String Function(Map<String, dynamic>) buildFriendTag;
 
   const _FriendsTabBody({required this.buildFriendTag});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_FriendsTabBody> createState() => _FriendsTabBodyState();
+}
+
+class _FriendsTabBodyState extends ConsumerState<_FriendsTabBody> {
+  // Map of friendId -> unread count
+  final Map<String, int> _unreadCounts = {};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUnreadCounts();
+    });
+  }
+
+  Future<void> _loadUnreadCounts() async {
+    try {
+      final convs = await ChatService.instance.loadConversations();
+      if (mounted) {
+        final Map<String, int> counts = {};
+        for (final conv in convs) {
+          final friend = conv['friend'] as Map<String, dynamic>?;
+          if (friend != null) {
+            final id = friend['id'] as String;
+            counts[id] = conv['unread_count'] as int? ?? 0;
+          }
+        }
+        setState(() {
+          _unreadCounts.addAll(counts);
+        });
+      }
+    } catch (_) {}
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final friendsAsync = ref.watch(friendsListProvider);
 
     return Column(
@@ -689,7 +725,12 @@ class _FriendsTabBody extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final f = friends[index];
                   final name = f['username'] as String? ?? '?';
-                  final tag = buildFriendTag(f);
+                  final avatar = f['avatar_emoji'] as String? ?? '🎮';
+                  final tag = widget.buildFriendTag(f);
+                  final friendId = f['id'] as String? ?? '';
+                  final lastSeen = f['last_seen'] as String?;
+                  final isOnline = ChatService.instance.isOnline(lastSeen);
+                  final unread = _unreadCounts[friendId] ?? 0;
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     color: AppColors.card,
@@ -710,11 +751,8 @@ class _FriendsTabBody extends ConsumerWidget {
                                 backgroundColor:
                                     AppColors.primary.withValues(alpha: 0.18),
                                 child: Text(
-                                  name.isNotEmpty ? name[0].toUpperCase() : '?',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  avatar,
+                                  style: const TextStyle(fontSize: 20),
                                 ),
                               ),
                               Positioned(
@@ -724,7 +762,7 @@ class _FriendsTabBody extends ConsumerWidget {
                                   width: 11,
                                   height: 11,
                                   decoration: BoxDecoration(
-                                    color: AppColors.muted,
+                                    color: isOnline ? AppColors.success : AppColors.muted,
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: AppColors.card,
@@ -740,12 +778,33 @@ class _FriendsTabBody extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                  Text(
-                                    name,
-                                    style: GoogleFonts.inter(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 16,
-                                    ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        name,
+                                        style: GoogleFonts.inter(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      if (isOnline)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.success.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            'Online',
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10,
+                                              color: AppColors.success,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   Text(
                                     tag,
@@ -775,23 +834,44 @@ class _FriendsTabBody extends ConsumerWidget {
                               );
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.chat_bubble_outline_rounded),
-                            color: AppColors.textSecondary,
-                            tooltip: 'Chat',
-                            onPressed: () {
-                              SoundService.instance.play(SoundType.buttonTap);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Chat coming soon.',
-                                    style: GoogleFonts.inter(),
+                          // Chat button with unread badge
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.chat_bubble_rounded),
+                                color: AppColors.primary,
+                                tooltip: 'Chat',
+                                onPressed: () {
+                                  SoundService.instance.play(SoundType.buttonTap);
+                                  if (friendId.isNotEmpty) {
+                                    context.push('/chat/$friendId').then((_) {
+                                      _loadUnreadCounts();
+                                    });
+                                  }
+                                },
+                              ),
+                              if (unread > 0)
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      '$unread',
+                                      style: GoogleFonts.inter(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                  behavior: SnackBarBehavior.floating,
-                                  backgroundColor: AppColors.card2,
                                 ),
-                              );
-                            },
+                            ],
                           ),
                         ],
                       ),
