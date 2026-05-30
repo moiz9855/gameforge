@@ -255,14 +255,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Save profile details to database
     try {
-      await Supabase.instance.client.from('users').upsert({
-        'id': user.id,
+      await Supabase.instance.client.from('users').update({
         'username': _username,
         'avatar_emoji': _selectedAvatar,
         'gamer_types': _selectedGamerTypes,
         'friend_id': _friendId,
         'onboarding_completed': true,
-      });
+      }).eq('id', user.id);
 
       // Save locally
       final prefs = await SharedPreferences.getInstance();
